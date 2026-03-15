@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "openclaw": "tsx openclaw/src/daemon.ts",
-    "openclaw:whatsapp": "tsx openclaw/src/whatsapp-gateway.ts"
+    "openclaw:telegram": "tsx openclaw/src/telegram-gateway.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
@@ -22,6 +22,7 @@
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.67.0",
     "pdf-parse": "^2.4.5",
     "qrcode-terminal": "^0.12.0",
     "react": "19.2.3",
@@ -37,6 +38,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/node-cron": "^3.0.11",
+    "@types/node-telegram-bot-api": "^0.64.14",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",

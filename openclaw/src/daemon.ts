@@ -2,7 +2,7 @@
  * OpenClaw Daemon — Main Entry Point
  * 
  * Starts the full OpenClaw runtime:
- *   1. WhatsApp Gateway (Baileys linked device)
+ *   1. Telegram Gateway (Bot API)
  *   2. Gmail Inbox Crawler (IMAP)
  *   3. Heartbeat Scheduler (node-cron)
  * 
@@ -13,6 +13,8 @@
  *   ANTHROPIC_API_KEY     — Claude API key (used by Next.js API)
  *   GMAIL_USER            — Gmail address for inbox crawling
  *   GMAIL_APP_PASSWORD    — Google App Password (not regular password)
+ *   TELEGRAM_BOT_TOKEN    — Telegram bot token from @BotFather
+ *   TELEGRAM_CHAT_ID      — (optional) Target chat ID for briefings
  *   DILIGENT_API_URL      — API base URL (default: http://localhost:3001)
  */
 
@@ -20,7 +22,7 @@ import * as cron from 'node-cron';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import { WhatsAppGateway } from './whatsapp-gateway.js';
+import { TelegramGateway } from './telegram-gateway.js';
 import { GmailCrawler } from './gmail-crawler.js';
 
 // Load .env.local from the project root
@@ -38,14 +40,14 @@ console.log(`
 ║       🦞  OpenClaw Daemon  v1.0.0           ║
 ║       Diligent-AI Gateway Runtime            ║
 ╠══════════════════════════════════════════════╣
-║  WhatsApp Gateway  │  Baileys WebSocket      ║
+║  Telegram Gateway  │  Bot API (polling)      ║
 ║  Gmail Crawler     │  IMAP / App Password    ║
 ║  Heartbeat         │  07:00 AM daily         ║
 ╚══════════════════════════════════════════════╝
 `);
 
 // ─── Initialize Components ─────────────────────────
-const whatsapp = new WhatsAppGateway();
+const telegram = new TelegramGateway();
 const gmail = new GmailCrawler();
 
 let briefingInProgress = false;
@@ -91,16 +93,16 @@ async function runMorningBriefing(): Promise<void> {
     if (briefing) {
       console.log('\n📋 Briefing compiled successfully');
 
-      // Step 3: Send via WhatsApp
-      if (whatsapp.isConnected()) {
-        const sent = await whatsapp.sendBriefing(briefing);
+      // Step 3: Send via Telegram
+      if (telegram.isConnected()) {
+        const sent = await telegram.sendBriefing(briefing);
         if (sent) {
-          console.log('📱 Briefing delivered via WhatsApp');
+          console.log('📱 Briefing delivered via Telegram');
         } else {
-          console.log('⚠️  WhatsApp delivery failed — briefing available on dashboard');
+          console.log('⚠️  Telegram delivery failed — briefing available on dashboard');
         }
       } else {
-        console.log('⚠️  WhatsApp not connected — briefing available on dashboard');
+        console.log('⚠️  Telegram not connected — briefing available on dashboard');
       }
 
       // Step 4: Log execution
@@ -120,9 +122,9 @@ async function runMorningBriefing(): Promise<void> {
       `\n## ${today} ${new Date().toLocaleTimeString()}\nError: ${error.message}\n`
     );
 
-    // Notify via WhatsApp if connected
-    if (whatsapp.isConnected()) {
-      await whatsapp.sendBriefing(
+    // Notify via Telegram if connected
+    if (telegram.isConnected()) {
+      await telegram.sendBriefing(
         `⚠️ *Morning Briefing Failed*\n\nError: ${error.message}\n\nCheck the dashboard for details.`
       );
     }
@@ -158,30 +160,26 @@ async function main(): Promise<void> {
   console.log('📡 Configuration:');
   console.log(`   API URL:    ${DILIGENT_API_URL}`);
   console.log(`   Gmail:      ${gmail.isConfigured() ? process.env.GMAIL_USER : '❌ Not configured'}`);
-  console.log(`   WhatsApp:   Starting...`);
+  console.log(`   Telegram:   ${process.env.TELEGRAM_BOT_TOKEN ? 'Starting...' : '❌ Not configured'}`);
   console.log('');
 
-  // 1. Start WhatsApp Gateway (non-blocking — daemon continues if it fails)
-  whatsapp.on('connected', () => {
-    console.log('📱 WhatsApp ready — VC can send pitch decks');
+  // 1. Start Telegram Gateway (non-blocking — daemon continues if it fails)
+  telegram.on('connected', () => {
+    console.log('📱 Telegram ready — VC can send pitch decks');
   });
 
-  whatsapp.on('trigger-briefing', async () => {
-    console.log('📬 Manual briefing triggered via WhatsApp');
+  telegram.on('trigger-briefing', async () => {
+    console.log('📬 Manual briefing triggered via Telegram');
     await runMorningBriefing();
   });
 
-  whatsapp.on('analysis-complete', (data: any) => {
+  telegram.on('analysis-complete', (data: any) => {
     console.log(`📊 Deal analyzed: ${data.company} → ${data.verdict}`);
   });
 
-  whatsapp.on('give-up', () => {
-    console.log('⚠️  WhatsApp unavailable — daemon continues with Gmail + dashboard only');
-  });
-
-  // Start WhatsApp in background so it doesn't block the daemon
-  whatsapp.start().catch((err: any) => {
-    console.log(`⚠️  WhatsApp failed to start: ${err.message}`);
+  // Start Telegram in background so it doesn't block the daemon
+  telegram.start().catch((err: any) => {
+    console.log(`⚠️  Telegram failed to start: ${err.message}`);
     console.log('   Daemon continues with Gmail + Dashboard only.');
   });
 
@@ -224,11 +222,13 @@ async function main(): Promise<void> {
 // ─── Graceful Shutdown ─────────────────────────────
 process.on('SIGINT', async () => {
   console.log('\n\n🛑 Shutting down OpenClaw daemon...');
+  telegram.stop();
   await gmail.disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
+  telegram.stop();
   await gmail.disconnect();
   process.exit(0);
 });
