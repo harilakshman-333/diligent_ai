@@ -6,6 +6,7 @@ import {
   generateMemo,
   generatePitchOnlyMemo,
 } from "@/lib/memo-generator";
+import { runFounderIntel, FounderIntelResult } from "@/lib/founder-intel";
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,7 +55,26 @@ export async function POST(request: NextRequest) {
 
     if (pitchOnly) {
       // Pitch-only mode: no financials, lighter memo
-      const memo = await generatePitchOnlyMemo(pitchData, marketData);
+      // Run memo generation and founder intel in parallel
+      const [memo, founderIntel] = await Promise.all([
+        generatePitchOnlyMemo(pitchData, marketData),
+        runFounderIntel(
+          pitchData.companyName,
+          pitchData.teamHighlights,
+          pitchData.sector
+        ).catch((err): FounderIntelResult => {
+          console.error("Founder intel failed (non-blocking):", err.message);
+          return {
+            founders: [],
+            companyCheck: { companiesHouse: "Check failed", secEdgar: "Check failed", incorporationStatus: "Unknown", filingFlags: [] },
+            adverseMedia: [],
+            inconsistencies: [],
+            overallRiskLevel: "medium",
+            summary: "Founder intel check could not be completed.",
+            sources: [],
+          };
+        }),
+      ]);
 
       const verdictMatch = memo.match(/\b(STRONG BUY|BUY|HOLD|PASS)\b/);
 
@@ -64,6 +84,7 @@ export async function POST(request: NextRequest) {
         memo,
         pitchData,
         marketData,
+        founderIntel,
         dealLog: {
           companyName: pitchData.companyName,
           sector: pitchData.sector,
@@ -99,8 +120,26 @@ export async function POST(request: NextRequest) {
       spreadsheetFile!.name
     );
 
-    // Step 4: Generate the full investment memo
-    const memo = await generateMemo(pitchData, financials, marketData);
+    // Step 4: Generate the full investment memo + founder intel in parallel
+    const [memo, founderIntel] = await Promise.all([
+      generateMemo(pitchData, financials, marketData),
+      runFounderIntel(
+        pitchData.companyName,
+        pitchData.teamHighlights,
+        pitchData.sector
+      ).catch((err): FounderIntelResult => {
+        console.error("Founder intel failed (non-blocking):", err.message);
+        return {
+          founders: [],
+          companyCheck: { companiesHouse: "Check failed", secEdgar: "Check failed", incorporationStatus: "Unknown", filingFlags: [] },
+          adverseMedia: [],
+          inconsistencies: [],
+          overallRiskLevel: "medium",
+          summary: "Founder intel check could not be completed.",
+          sources: [],
+        };
+      }),
+    ]);
 
     const verdictMatch = memo.match(/\b(STRONG BUY|BUY|HOLD|PASS)\b/);
 
@@ -111,6 +150,7 @@ export async function POST(request: NextRequest) {
       pitchData,
       financials,
       marketData,
+      founderIntel,
       dealLog: {
         companyName: pitchData.companyName,
         sector: pitchData.sector,

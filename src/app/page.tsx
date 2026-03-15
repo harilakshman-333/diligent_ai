@@ -38,6 +38,10 @@ import {
   Minus,
   Sparkles,
   Loader2,
+  UserCheck,
+  ShieldAlert,
+  Building,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +82,29 @@ type SourceData = {
     }>;
   } | null;
   hasFinancials: boolean;
+  founderIntel: FounderIntelData | null;
+};
+
+type FounderIntelData = {
+  founders: Array<{
+    name: string;
+    linkedinSummary: string;
+    priorVentures: string[];
+    notableAchievements: string[];
+    redFlags: string[];
+    overallAssessment: "green" | "yellow" | "red";
+  }>;
+  companyCheck: {
+    companiesHouse: string;
+    secEdgar: string;
+    incorporationStatus: string;
+    filingFlags: string[];
+  };
+  adverseMedia: string[];
+  inconsistencies: string[];
+  overallRiskLevel: "low" | "medium" | "high";
+  summary: string;
+  sources: string[];
 };
 
 type Deal = {
@@ -452,7 +479,7 @@ export default function Home() {
           timestamp: new Date(),
           mode: spreadsheetFile ? "full" : "pitch-only",
           chatHistory: [],
-          sourceData: { pitchData: null, marketData: null, hasFinancials: false },
+          sourceData: { pitchData: null, marketData: null, hasFinancials: false, founderIntel: null },
         };
         setDeals((prev) => [...prev, newDeal]);
         setActiveDealIndex(deals.length);
@@ -472,6 +499,7 @@ export default function Home() {
             pitchData: data.pitchData || null,
             marketData: data.marketData || null,
             hasFinancials: !!data.financials,
+            founderIntel: data.founderIntel || null,
           },
         };
         setDeals((prev) => [...prev, newDeal]);
@@ -491,7 +519,7 @@ export default function Home() {
         timestamp: new Date(),
         mode: spreadsheetFile ? "full" : "pitch-only",
         chatHistory: [],
-        sourceData: { pitchData: null, marketData: null, hasFinancials: false },
+        sourceData: { pitchData: null, marketData: null, hasFinancials: false, founderIntel: null },
       };
       setDeals((prev) => [...prev, newDeal]);
       setActiveDealIndex(deals.length);
@@ -1044,6 +1072,234 @@ export default function Home() {
                     </div>
                   </div>
                 )}
+
+                {/* ===== FOUNDER INTEL SECTION ===== */}
+                {activeDeal?.sourceData?.founderIntel && (
+                  <div className="mt-16 border-t-2 border-border/30 pt-10">
+                    <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 mb-3">
+                      <ShieldAlert className="h-7 w-7 text-rose-400" />
+                      Founder Intel &amp; Background Check
+                    </h2>
+                    <div className="flex items-center gap-3 mb-8">
+                      <p className="text-lg text-muted-foreground leading-relaxed">
+                        Independent verification via Claude web search — cross-referencing public records, news, and registries.
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className={`text-sm px-3 py-1 whitespace-nowrap ${
+                          activeDeal.sourceData.founderIntel.overallRiskLevel === "low"
+                            ? "border-emerald-500/40 text-emerald-400"
+                            : activeDeal.sourceData.founderIntel.overallRiskLevel === "medium"
+                              ? "border-amber-500/40 text-amber-400"
+                              : "border-rose-500/40 text-rose-400"
+                        }`}
+                      >
+                        {activeDeal.sourceData.founderIntel.overallRiskLevel === "low" ? "🟢" : activeDeal.sourceData.founderIntel.overallRiskLevel === "medium" ? "🟡" : "🔴"}{" "}
+                        {activeDeal.sourceData.founderIntel.overallRiskLevel.toUpperCase()} RISK
+                      </Badge>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="rounded-xl border border-slate-500/20 bg-slate-500/5 p-6 mb-6">
+                      <p className="text-lg leading-relaxed">{activeDeal.sourceData.founderIntel.summary}</p>
+                    </div>
+
+                    {/* Founder Profiles */}
+                    {activeDeal.sourceData.founderIntel.founders.length > 0 && (
+                      <div className="grid gap-4 mb-6">
+                        {activeDeal.sourceData.founderIntel.founders.map((founder, idx) => (
+                          <div key={idx} className={`rounded-xl border p-6 ${
+                            founder.overallAssessment === "green"
+                              ? "border-emerald-500/20 bg-emerald-500/5"
+                              : founder.overallAssessment === "yellow"
+                                ? "border-amber-500/20 bg-amber-500/5"
+                                : "border-rose-500/20 bg-rose-500/5"
+                          }`}>
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                                founder.overallAssessment === "green"
+                                  ? "bg-emerald-500/15"
+                                  : founder.overallAssessment === "yellow"
+                                    ? "bg-amber-500/15"
+                                    : "bg-rose-500/15"
+                              }`}>
+                                <UserCheck className={`h-5 w-5 ${
+                                  founder.overallAssessment === "green"
+                                    ? "text-emerald-400"
+                                    : founder.overallAssessment === "yellow"
+                                      ? "text-amber-400"
+                                      : "text-rose-400"
+                                }`} />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-lg font-bold">{founder.name}</h3>
+                                <p className="text-base text-muted-foreground">{founder.linkedinSummary}</p>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={`text-xs px-2 py-0.5 ${
+                                  founder.overallAssessment === "green"
+                                    ? "border-emerald-500/40 text-emerald-400"
+                                    : founder.overallAssessment === "yellow"
+                                      ? "border-amber-500/40 text-amber-400"
+                                      : "border-rose-500/40 text-rose-400"
+                                }`}
+                              >
+                                {founder.overallAssessment === "green" ? "✓ CLEAR" : founder.overallAssessment === "yellow" ? "⚠ CAUTION" : "✗ FLAG"}
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                              {/* Prior Ventures */}
+                              {founder.priorVentures.length > 0 && (
+                                <div className="rounded-lg bg-background/50 px-4 py-3">
+                                  <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                                    <Building className="h-3.5 w-3.5" /> Prior Ventures
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {founder.priorVentures.map((v, i) => (
+                                      <li key={i} className="text-sm">{v}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Achievements */}
+                              {founder.notableAchievements.length > 0 && (
+                                <div className="rounded-lg bg-background/50 px-4 py-3">
+                                  <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                                    <Sparkles className="h-3.5 w-3.5" /> Notable Achievements
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {founder.notableAchievements.map((a, i) => (
+                                      <li key={i} className="text-sm">{a}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Red Flags */}
+                              {founder.redFlags.length > 0 && (
+                                <div className="rounded-lg bg-background/50 px-4 py-3">
+                                  <p className="text-sm font-medium text-rose-400 mb-2 flex items-center gap-1.5">
+                                    <Flag className="h-3.5 w-3.5" /> Red Flags
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {founder.redFlags.map((f, i) => (
+                                      <li key={i} className="text-sm text-rose-300">{f}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Company Registry Check */}
+                    <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-6 mb-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/15">
+                          <Building className="h-5 w-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold">Company Registry Verification</h3>
+                          <p className="text-base text-muted-foreground">Companies House (UK) &amp; SEC EDGAR (US)</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div className="rounded-lg bg-background/50 px-4 py-3">
+                          <p className="text-sm font-medium text-muted-foreground">Companies House (UK)</p>
+                          <p className="text-base">{activeDeal.sourceData.founderIntel.companyCheck.companiesHouse}</p>
+                        </div>
+                        <div className="rounded-lg bg-background/50 px-4 py-3">
+                          <p className="text-sm font-medium text-muted-foreground">SEC EDGAR (US)</p>
+                          <p className="text-base">{activeDeal.sourceData.founderIntel.companyCheck.secEdgar}</p>
+                        </div>
+                        <div className="rounded-lg bg-background/50 px-4 py-3">
+                          <p className="text-sm font-medium text-muted-foreground">Incorporation Status</p>
+                          <p className="text-base font-semibold">{activeDeal.sourceData.founderIntel.companyCheck.incorporationStatus}</p>
+                        </div>
+                        {activeDeal.sourceData.founderIntel.companyCheck.filingFlags.length > 0 && (
+                          <div className="rounded-lg bg-background/50 px-4 py-3">
+                            <p className="text-sm font-medium text-amber-400">Filing Flags</p>
+                            <ul className="space-y-1 mt-1">
+                              {activeDeal.sourceData.founderIntel.companyCheck.filingFlags.map((f, i) => (
+                                <li key={i} className="text-sm text-amber-300">{f}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Adverse Media & Inconsistencies */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      {activeDeal.sourceData.founderIntel.adverseMedia.length > 0 && (
+                        <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-6">
+                          <h3 className="text-lg font-bold text-rose-400 mb-3 flex items-center gap-2">
+                            <AlertCircle className="h-5 w-5" /> Adverse Media
+                          </h3>
+                          <ul className="space-y-2">
+                            {activeDeal.sourceData.founderIntel.adverseMedia.map((item, i) => (
+                              <li key={i} className="text-base text-rose-300/90 flex items-start gap-2">
+                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-rose-400 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {activeDeal.sourceData.founderIntel.inconsistencies.length > 0 && (
+                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
+                          <h3 className="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2">
+                            <Flag className="h-5 w-5" /> Inconsistencies
+                          </h3>
+                          <ul className="space-y-2">
+                            {activeDeal.sourceData.founderIntel.inconsistencies.map((item, i) => (
+                              <li key={i} className="text-base text-amber-300/90 flex items-start gap-2">
+                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* No adverse media / inconsistencies = good sign */}
+                    {activeDeal.sourceData.founderIntel.adverseMedia.length === 0 && activeDeal.sourceData.founderIntel.inconsistencies.length === 0 && (
+                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6 mb-6">
+                        <p className="text-lg text-emerald-400 flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5" />
+                          No adverse media or deck-vs-reality inconsistencies found
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Sources */}
+                    {activeDeal.sourceData.founderIntel.sources.length > 0 && (
+                      <div className="mt-6">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Sources</p>
+                        <div className="flex flex-wrap gap-2">
+                          {activeDeal.sourceData.founderIntel.sources.map((src, i) => (
+                            <a
+                              key={i}
+                              href={src}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2 break-all"
+                            >
+                              {src.length > 60 ? src.slice(0, 60) + "…" : src}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 </>
               ) : isGenerating ? (
                 <div className="space-y-8 py-4">
@@ -1051,6 +1307,7 @@ export default function Home() {
                     { color: "violet", label: "Parsing pitch deck with Claude..." },
                     { color: "emerald", label: "Analyzing financial spreadsheet..." },
                     { color: "blue", label: "Fetching market comps..." },
+                    { color: "rose", label: "Running Founder Intel background check..." },
                     { color: "amber", label: "Drafting investment memo..." },
                   ].map((step) => (
                     <div key={step.color} className="space-y-3">
