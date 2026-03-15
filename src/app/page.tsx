@@ -227,6 +227,7 @@ export default function Home() {
   const [researchResults, setResearchResults] = useState<ResearchResult[]>([]);
   const [activeResearchIndex, setActiveResearchIndex] = useState<number | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [generalChatHistory, setGeneralChatHistory] = useState<ChatMessage[]>([]);
 
   // Keep refs in sync so the interval callback sees latest values
   useEffect(() => { autoScanRef.current = autoScan; }, [autoScan]);
@@ -350,20 +351,26 @@ export default function Home() {
   const activeMemo = activeDeal?.memo ?? null;
 
   const handleChat = async () => {
-    if (!chatInput.trim() || !activeDeal || isChatting) return;
+    if (!chatInput.trim() || isChatting) return;
 
     const userMessage = chatInput.trim();
     setChatInput("");
     setIsChatting(true);
 
+    const isDealChat = !!activeDeal && !!activeMemo;
+
     // Add user message immediately
-    setDeals((prev) =>
-      prev.map((deal, i) =>
-        i === activeDealIndex
-          ? { ...deal, chatHistory: [...deal.chatHistory, { role: "user" as const, content: userMessage }] }
-          : deal
-      )
-    );
+    if (isDealChat) {
+      setDeals((prev) =>
+        prev.map((deal, i) =>
+          i === activeDealIndex
+            ? { ...deal, chatHistory: [...deal.chatHistory, { role: "user" as const, content: userMessage }] }
+            : deal
+        )
+      );
+    } else {
+      setGeneralChatHistory((prev) => [...prev, { role: "user" as const, content: userMessage }]);
+    }
 
     try {
       const res = await fetch("/api/chat", {
@@ -371,30 +378,45 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
-          memo: activeDeal.memo,
-          companyName: activeDeal.companyName,
-          history: activeDeal.chatHistory,
+          ...(isDealChat
+            ? {
+                memo: activeDeal!.memo,
+                companyName: activeDeal!.companyName,
+                history: activeDeal!.chatHistory,
+              }
+            : {
+                history: generalChatHistory,
+              }),
         }),
       });
 
       const data = await res.json();
       const reply = data.reply || "Sorry, I couldn't generate a response.";
 
-      setDeals((prev) =>
-        prev.map((deal, i) =>
-          i === activeDealIndex
-            ? { ...deal, chatHistory: [...deal.chatHistory, { role: "assistant" as const, content: reply }] }
-            : deal
-        )
-      );
+      if (isDealChat) {
+        setDeals((prev) =>
+          prev.map((deal, i) =>
+            i === activeDealIndex
+              ? { ...deal, chatHistory: [...deal.chatHistory, { role: "assistant" as const, content: reply }] }
+              : deal
+          )
+        );
+      } else {
+        setGeneralChatHistory((prev) => [...prev, { role: "assistant" as const, content: reply }]);
+      }
     } catch {
-      setDeals((prev) =>
-        prev.map((deal, i) =>
-          i === activeDealIndex
-            ? { ...deal, chatHistory: [...deal.chatHistory, { role: "assistant" as const, content: "Network error. Please try again." }] }
-            : deal
-        )
-      );
+      const errorMsg = "Network error. Please try again.";
+      if (isDealChat) {
+        setDeals((prev) =>
+          prev.map((deal, i) =>
+            i === activeDealIndex
+              ? { ...deal, chatHistory: [...deal.chatHistory, { role: "assistant" as const, content: errorMsg }] }
+              : deal
+          )
+        );
+      } else {
+        setGeneralChatHistory((prev) => [...prev, { role: "assistant" as const, content: errorMsg }]);
+      }
     } finally {
       setIsChatting(false);
     }
@@ -1987,10 +2009,10 @@ export default function Home() {
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="text-base font-bold truncate">
-                {activeDeal ? `Ask about ${activeDeal.companyName}` : "Deal Assistant"}
+                {activeDeal && activeMemo ? `Ask about ${activeDeal.companyName}` : "Diligent-AI Assistant"}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {activeDeal ? "AI-powered Q&A" : "Generate a memo first"}
+                {activeDeal && activeMemo ? "Deal-specific Q&A" : "Finance, trading & company research"}
               </p>
             </div>
             <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground">
@@ -2000,114 +2022,112 @@ export default function Home() {
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[480px]">
-            {!activeDeal || !activeMemo ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="mb-4 rounded-full bg-violet-500/10 p-4">
-                  <Bot className="h-10 w-10 text-violet-400/50" />
-                </div>
-                <p className="text-base text-muted-foreground/60">
-                  Generate a memo to start<br />chatting about the deal
-                </p>
-              </div>
-            ) : (
-              <>
-                {(!activeDeal.chatHistory || activeDeal.chatHistory.length === 0) && !isChatting && (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <div className="mb-4 rounded-full bg-violet-500/10 p-4">
-                      <Bot className="h-10 w-10 text-violet-400/50" />
+            {(() => {
+              const chatHistory = activeDeal && activeMemo ? activeDeal.chatHistory : generalChatHistory;
+              const isEmpty = !chatHistory || chatHistory.length === 0;
+              return (
+                <>
+                  {isEmpty && !isChatting && (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div className="mb-4 rounded-full bg-violet-500/10 p-4">
+                        <Bot className="h-10 w-10 text-violet-400/50" />
+                      </div>
+                      <p className="text-base font-medium text-muted-foreground/60">
+                        {activeDeal && activeMemo
+                          ? `Ask anything about ${activeDeal.companyName}`
+                          : "Ask me anything about finance, trading, or companies"}
+                      </p>
+                      <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        {(activeDeal && activeMemo
+                          ? ["Key risks?", "Market size?", "Should I invest?"]
+                          : ["What is a DCF?", "NVDA vs AMD?", "Explain P/E ratio", "Top AI stocks?"]
+                        ).map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => { setChatInput(q); }}
+                            className="rounded-full border border-border/40 bg-muted/20 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-violet-500/10 hover:text-violet-400 hover:border-violet-500/30"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-base font-medium text-muted-foreground/60">
-                      Ask anything about {activeDeal.companyName}
-                    </p>
-                    <div className="mt-4 flex flex-wrap justify-center gap-2">
-                      {["Key risks?", "Market size?", "Should I invest?"].map((q) => (
-                        <button
-                          key={q}
-                          onClick={() => { setChatInput(q); }}
-                          className="rounded-full border border-border/40 bg-muted/20 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-violet-500/10 hover:text-violet-400 hover:border-violet-500/30"
-                        >
-                          {q}
-                        </button>
-                      ))}
+                  )}
+                  {chatHistory?.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      {msg.role === "assistant" && (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
+                          <Bot className="h-5 w-5 text-violet-400" />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-4 py-3 text-base leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-violet-600 text-white"
+                            : "bg-muted/40 text-foreground"
+                        }`}
+                      >
+                        {msg.role === "assistant" ? (
+                          <div className="prose dark:prose-invert prose-base max-w-none prose-p:my-1 prose-p:text-base prose-p:leading-relaxed prose-li:text-base">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
+                      {msg.role === "user" && (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/40">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-                {activeDeal.chatHistory?.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    {msg.role === "assistant" && (
+                  ))}
+                  {isChatting && (
+                    <div className="flex gap-2.5">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
                         <Bot className="h-5 w-5 text-violet-400" />
                       </div>
-                    )}
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 text-base leading-relaxed ${
-                        msg.role === "user"
-                          ? "bg-violet-600 text-white"
-                          : "bg-muted/40 text-foreground"
-                      }`}
-                    >
-                      {msg.role === "assistant" ? (
-                        <div className="prose dark:prose-invert prose-base max-w-none prose-p:my-1 prose-p:text-base prose-p:leading-relaxed prose-li:text-base">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      ) : (
-                        msg.content
-                      )}
-                    </div>
-                    {msg.role === "user" && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/40">
-                        <User className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex items-center gap-2 rounded-2xl bg-muted/40 px-4 py-3">
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" style={{ animationDelay: "0ms" }} />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" style={{ animationDelay: "150ms" }} />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" style={{ animationDelay: "300ms" }} />
                       </div>
-                    )}
-                  </div>
-                ))}
-                {isChatting && (
-                  <div className="flex gap-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
-                      <Bot className="h-5 w-5 text-violet-400" />
                     </div>
-                    <div className="flex items-center gap-2 rounded-2xl bg-muted/40 px-4 py-3">
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" style={{ animationDelay: "0ms" }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" style={{ animationDelay: "150ms" }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" style={{ animationDelay: "300ms" }} />
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              );
+            })()}
           </div>
 
-          {/* Chat Input */}
-          {activeDeal && activeMemo && (
-            <div className="border-t border-border/40 p-4">
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleChat(); }}
-                className="flex gap-2"
+          {/* Chat Input — always visible */}
+          <div className="border-t border-border/40 p-4">
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleChat(); }}
+              className="flex gap-2"
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={activeDeal && activeMemo ? `Ask about ${activeDeal.companyName}...` : "Ask about finance, stocks, trading..."}
+                className="flex-1 rounded-xl border border-border/40 bg-muted/10 px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/20"
+                disabled={isChatting}
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="gap-2 rounded-xl px-4 py-3"
+                disabled={!chatInput.trim() || isChatting}
               >
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask a question..."
-                  className="flex-1 rounded-xl border border-border/40 bg-muted/10 px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/20"
-                  disabled={isChatting}
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="gap-2 rounded-xl px-4 py-3"
-                  disabled={!chatInput.trim() || isChatting}
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </form>
-            </div>
-          )}
+                <Send className="h-5 w-5" />
+              </Button>
+            </form>
+          </div>
         </div>
       )}
     </div>
