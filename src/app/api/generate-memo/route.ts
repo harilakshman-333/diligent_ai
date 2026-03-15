@@ -7,6 +7,7 @@ import {
   generatePitchOnlyMemo,
 } from "@/lib/memo-generator";
 import { runFounderIntel, FounderIntelResult } from "@/lib/founder-intel";
+import { runLegalScan, LegalScanResult } from "@/lib/legal-scan";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 1: Parse the pitch deck with Claude
-    const pitchData = await parsePitchDeck(pdfFile);
+    const pitchResult = await parsePitchDeck(pdfFile);
+    const pitchData = pitchResult.data;
+    const deckRawText = pitchResult.rawText;
 
     // Step 2: Fetch public market data for competitors
     const competitorList = Array.isArray(pitchData.mainCompetitors)
@@ -55,8 +58,8 @@ export async function POST(request: NextRequest) {
 
     if (pitchOnly) {
       // Pitch-only mode: no financials, lighter memo
-      // Run memo generation and founder intel in parallel
-      const [memo, founderIntel] = await Promise.all([
+      // Run memo generation, founder intel, and legal scan in parallel
+      const [memo, founderIntel, legalScan] = await Promise.all([
         generatePitchOnlyMemo(pitchData, marketData),
         runFounderIntel(
           pitchData.companyName,
@@ -74,6 +77,17 @@ export async function POST(request: NextRequest) {
             sources: [],
           };
         }),
+        runLegalScan(pitchData, null, deckRawText).catch((err): LegalScanResult => {
+          console.error("Legal scan failed (non-blocking):", err.message);
+          return {
+            ipFlags: [],
+            financialDiscrepancies: [],
+            capTableFlags: [],
+            missingDocuments: [],
+            overallRiskLevel: "medium",
+            summary: "Legal scan could not be completed.",
+          };
+        }),
       ]);
 
       const verdictMatch = memo.match(/\b(STRONG BUY|BUY|HOLD|PASS)\b/);
@@ -85,6 +99,7 @@ export async function POST(request: NextRequest) {
         pitchData,
         marketData,
         founderIntel,
+        legalScan,
         dealLog: {
           companyName: pitchData.companyName,
           sector: pitchData.sector,
@@ -120,8 +135,8 @@ export async function POST(request: NextRequest) {
       spreadsheetFile!.name
     );
 
-    // Step 4: Generate the full investment memo + founder intel in parallel
-    const [memo, founderIntel] = await Promise.all([
+    // Step 4: Generate the full investment memo + founder intel + legal scan in parallel
+    const [memo, founderIntel, legalScan] = await Promise.all([
       generateMemo(pitchData, financials, marketData),
       runFounderIntel(
         pitchData.companyName,
@@ -139,6 +154,17 @@ export async function POST(request: NextRequest) {
           sources: [],
         };
       }),
+      runLegalScan(pitchData, financials, deckRawText).catch((err): LegalScanResult => {
+        console.error("Legal scan failed (non-blocking):", err.message);
+        return {
+          ipFlags: [],
+          financialDiscrepancies: [],
+          capTableFlags: [],
+          missingDocuments: [],
+          overallRiskLevel: "medium",
+          summary: "Legal scan could not be completed.",
+        };
+      }),
     ]);
 
     const verdictMatch = memo.match(/\b(STRONG BUY|BUY|HOLD|PASS)\b/);
@@ -151,6 +177,7 @@ export async function POST(request: NextRequest) {
       financials,
       marketData,
       founderIntel,
+      legalScan,
       dealLog: {
         companyName: pitchData.companyName,
         sector: pitchData.sector,

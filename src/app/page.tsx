@@ -84,6 +84,34 @@ type SourceData = {
   } | null;
   hasFinancials: boolean;
   founderIntel: FounderIntelData | null;
+  legalScan: LegalScanData | null;
+};
+
+type LegalScanData = {
+  ipFlags: Array<{
+    issue: string;
+    severity: "critical" | "warning" | "info";
+    detail: string;
+  }>;
+  financialDiscrepancies: Array<{
+    field: string;
+    deckValue: string;
+    spreadsheetValue: string;
+    severity: "critical" | "warning" | "info";
+    explanation: string;
+  }>;
+  capTableFlags: Array<{
+    issue: string;
+    severity: "critical" | "warning" | "info";
+    detail: string;
+  }>;
+  missingDocuments: Array<{
+    document: string;
+    importance: "required" | "recommended" | "nice-to-have";
+    reason: string;
+  }>;
+  overallRiskLevel: "low" | "medium" | "high";
+  summary: string;
 };
 
 type FounderIntelData = {
@@ -912,7 +940,7 @@ export default function Home() {
           timestamp: new Date(),
           mode: spreadsheetFile ? "full" : "pitch-only",
           chatHistory: [],
-          sourceData: { pitchData: null, marketData: null, hasFinancials: false, founderIntel: null },
+          sourceData: { pitchData: null, marketData: null, hasFinancials: false, founderIntel: null, legalScan: null },
         };
         setDeals((prev) => [...prev, newDeal]);
         setActiveDealIndex(deals.length);
@@ -933,6 +961,7 @@ export default function Home() {
             marketData: data.marketData || null,
             hasFinancials: !!data.financials,
             founderIntel: data.founderIntel || null,
+            legalScan: data.legalScan || null,
           },
         };
         setDeals((prev) => [...prev, newDeal]);
@@ -952,7 +981,7 @@ export default function Home() {
         timestamp: new Date(),
         mode: spreadsheetFile ? "full" : "pitch-only",
         chatHistory: [],
-        sourceData: { pitchData: null, marketData: null, hasFinancials: false, founderIntel: null },
+        sourceData: { pitchData: null, marketData: null, hasFinancials: false, founderIntel: null, legalScan: null },
       };
       setDeals((prev) => [...prev, newDeal]);
       setActiveDealIndex(deals.length);
@@ -2419,6 +2448,174 @@ export default function Home() {
                       Background check will appear here<br />after analysis completes
                     </p>
                   </div>
+                )}
+
+                {/* ===== LEGAL & CAP TABLE SCAN ===== */}
+                {activeDeal.sourceData?.legalScan && (
+                  <>
+                    <div className="border-t-2 border-border/40 mt-6 pt-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
+                          <Shield className="h-5 w-5 text-amber-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-bold">Legal &amp; Cap Table Scan</h3>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs px-2 py-0.5 whitespace-nowrap ${
+                            activeDeal.sourceData.legalScan.overallRiskLevel === "low"
+                              ? "border-emerald-500/40 text-emerald-400"
+                              : activeDeal.sourceData.legalScan.overallRiskLevel === "medium"
+                                ? "border-amber-500/40 text-amber-400"
+                                : "border-rose-500/40 text-rose-400"
+                          }`}
+                        >
+                          {activeDeal.sourceData.legalScan.overallRiskLevel === "low" ? "🟢" : activeDeal.sourceData.legalScan.overallRiskLevel === "medium" ? "🟡" : "🔴"}{" "}
+                          {activeDeal.sourceData.legalScan.overallRiskLevel.toUpperCase()} RISK
+                        </Badge>
+                      </div>
+
+                      {/* Summary */}
+                      <div className="rounded-xl border border-slate-500/20 bg-slate-500/5 p-4 mb-4">
+                        <p className="text-sm leading-relaxed">{activeDeal.sourceData.legalScan.summary}</p>
+                      </div>
+
+                      {/* IP Flags */}
+                      {activeDeal.sourceData.legalScan.ipFlags.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            🔒 IP &amp; Patent Flags
+                          </h4>
+                          <div className="space-y-2">
+                            {activeDeal.sourceData.legalScan.ipFlags.map((flag, i) => (
+                              <div key={i} className={`rounded-lg border p-3 ${
+                                flag.severity === "critical"
+                                  ? "border-rose-500/30 bg-rose-500/5"
+                                  : flag.severity === "warning"
+                                    ? "border-amber-500/30 bg-amber-500/5"
+                                    : "border-blue-500/30 bg-blue-500/5"
+                              }`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`text-xs font-bold uppercase ${
+                                    flag.severity === "critical" ? "text-rose-400" : flag.severity === "warning" ? "text-amber-400" : "text-blue-400"
+                                  }`}>{flag.severity}</span>
+                                  <span className="text-sm font-semibold">{flag.issue}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{flag.detail}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Financial Discrepancies */}
+                      {activeDeal.sourceData.legalScan.financialDiscrepancies.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            📊 Financial Discrepancies
+                          </h4>
+                          <div className="space-y-2">
+                            {activeDeal.sourceData.legalScan.financialDiscrepancies.map((disc, i) => (
+                              <div key={i} className={`rounded-lg border p-3 ${
+                                disc.severity === "critical"
+                                  ? "border-rose-500/30 bg-rose-500/5"
+                                  : disc.severity === "warning"
+                                    ? "border-amber-500/30 bg-amber-500/5"
+                                    : "border-blue-500/30 bg-blue-500/5"
+                              }`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`text-xs font-bold uppercase ${
+                                    disc.severity === "critical" ? "text-rose-400" : disc.severity === "warning" ? "text-amber-400" : "text-blue-400"
+                                  }`}>{disc.severity}</span>
+                                  <span className="text-sm font-semibold">{disc.field}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 my-2">
+                                  <div className="rounded bg-background/50 px-3 py-1.5">
+                                    <p className="text-[10px] text-muted-foreground">Pitch Deck</p>
+                                    <p className="text-xs font-medium">{disc.deckValue}</p>
+                                  </div>
+                                  <div className="rounded bg-background/50 px-3 py-1.5">
+                                    <p className="text-[10px] text-muted-foreground">Spreadsheet</p>
+                                    <p className="text-xs font-medium">{disc.spreadsheetValue}</p>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{disc.explanation}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Cap Table Flags */}
+                      {activeDeal.sourceData.legalScan.capTableFlags.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            📋 Cap Table Red Flags
+                          </h4>
+                          <div className="space-y-2">
+                            {activeDeal.sourceData.legalScan.capTableFlags.map((flag, i) => (
+                              <div key={i} className={`rounded-lg border p-3 ${
+                                flag.severity === "critical"
+                                  ? "border-rose-500/30 bg-rose-500/5"
+                                  : flag.severity === "warning"
+                                    ? "border-amber-500/30 bg-amber-500/5"
+                                    : "border-blue-500/30 bg-blue-500/5"
+                              }`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`text-xs font-bold uppercase ${
+                                    flag.severity === "critical" ? "text-rose-400" : flag.severity === "warning" ? "text-amber-400" : "text-blue-400"
+                                  }`}>{flag.severity}</span>
+                                  <span className="text-sm font-semibold">{flag.issue}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{flag.detail}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Missing Documents Checklist */}
+                      {activeDeal.sourceData.legalScan.missingDocuments.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            📝 Missing Documents Checklist
+                          </h4>
+                          <div className="space-y-1.5">
+                            {activeDeal.sourceData.legalScan.missingDocuments.map((doc, i) => (
+                              <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-500/20 bg-slate-500/5 px-3 py-2.5">
+                                <span className={`mt-0.5 text-xs font-bold uppercase shrink-0 ${
+                                  doc.importance === "required" ? "text-rose-400" : doc.importance === "recommended" ? "text-amber-400" : "text-blue-400"
+                                }`}>
+                                  {doc.importance === "required" ? "⬜" : doc.importance === "recommended" ? "◻️" : "○"}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium">{doc.document}</p>
+                                  <p className="text-xs text-muted-foreground">{doc.reason}</p>
+                                  <Badge variant="outline" className={`text-[10px] mt-1 px-1.5 py-0 ${
+                                    doc.importance === "required" ? "border-rose-500/30 text-rose-400" : doc.importance === "recommended" ? "border-amber-500/30 text-amber-400" : "border-blue-500/30 text-blue-400"
+                                  }`}>{doc.importance}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* All clear */}
+                      {activeDeal.sourceData.legalScan.ipFlags.length === 0 &&
+                        activeDeal.sourceData.legalScan.financialDiscrepancies.length === 0 &&
+                        activeDeal.sourceData.legalScan.capTableFlags.length === 0 &&
+                        activeDeal.sourceData.legalScan.missingDocuments.length === 0 && (
+                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                          <p className="text-sm text-emerald-400 flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4" />
+                            No legal or financial red flags detected
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </>

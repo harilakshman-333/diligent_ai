@@ -9,7 +9,7 @@ type ChatMessage = {
 };
 
 async function callWithRetry(
-  params: Anthropic.MessageCreateParams,
+  params: Anthropic.MessageCreateParamsNonStreaming,
   retries = 2
 ): Promise<Anthropic.Message> {
   for (let attempt = 0; attempt < retries; attempt++) {

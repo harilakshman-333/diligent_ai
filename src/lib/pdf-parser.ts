@@ -15,11 +15,16 @@ export type PitchDeckData = {
   summary: string;
 };
 
+export type PitchDeckResult = {
+  data: PitchDeckData;
+  rawText: string;
+};
+
 /**
  * Parse a pitch deck PDF using Claude's native PDF support.
  * Falls back to pdf-parse text extraction if the PDF is too large for base64.
  */
-export async function parsePitchDeck(pdfFile: File): Promise<PitchDeckData> {
+export async function parsePitchDeck(pdfFile: File): Promise<PitchDeckResult> {
   const arrayBuffer = await pdfFile.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
@@ -27,6 +32,7 @@ export async function parsePitchDeck(pdfFile: File): Promise<PitchDeckData> {
   const MAX_PDF_SIZE = 30 * 1024 * 1024; // 30MB to be safe
 
   let response;
+  let rawText = "";
 
   if (buffer.length <= MAX_PDF_SIZE) {
     // Primary path: send PDF directly to Claude
@@ -73,7 +79,8 @@ If a field isn't found in the deck, use "N/A".`,
     // Fallback: extract text with pdf-parse, then send text to Claude
     const parser = new PDFParse({ data: new Uint8Array(buffer) });
     const textResult = await parser.getText();
-    const text = textResult.text.slice(0, 50000); // Limit text length
+    rawText = textResult.text.slice(0, 50000);
+    const text = rawText; // Limit text length
 
     response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -119,5 +126,17 @@ If a field isn't found in the deck, use "N/A".`,
     parsed.mainCompetitors = parsed.mainCompetitors ? [String(parsed.mainCompetitors)] : [];
   }
 
-  return parsed;
+  // If we used the base64 path, try to extract raw text via pdf-parse for legal scan
+  if (!rawText) {
+    try {
+      const parser = new PDFParse({ data: new Uint8Array(buffer) });
+      const textResult = await parser.getText();
+      rawText = textResult.text.slice(0, 50000);
+    } catch {
+      // Use the structured data as fallback text
+      rawText = JSON.stringify(parsed);
+    }
+  }
+
+  return { data: parsed, rawText };
 }
