@@ -38,6 +38,7 @@ import {
   Minus,
   Sparkles,
   Loader2,
+  Activity,
   UserCheck,
   ShieldAlert,
   Building,
@@ -160,7 +161,7 @@ type GmailDeal = {
   summary: string;
 };
 
-type ActiveTab = "memo" | "gmail" | "research";
+type ActiveTab = "memo" | "gmail" | "research" | "monitor";
 
 type ResearchCompany = {
   name: string;
@@ -198,6 +199,413 @@ type ResearchResult = {
   status: "success" | "error";
   error?: string;
 };
+
+/* ===== MONITOR AI CANVAS COMPONENT ===== */
+type Particle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  alpha: number;
+  life: number;
+  maxLife: number;
+  nodeIdx: number; // which process node it orbits
+};
+
+type ProcessNode = {
+  label: string;
+  icon: string;
+  x: number;
+  y: number;
+  color: string;
+  glowColor: string;
+  active: boolean;
+  pulsePhase: number;
+};
+
+function MonitorAICanvas({
+  isGenerating,
+  isCrawling,
+  isResearching,
+  isChatting,
+  autoScan,
+  dealsCount,
+  gmailScansCount,
+  researchCount,
+}: {
+  isGenerating: boolean;
+  isCrawling: boolean;
+  isResearching: boolean;
+  isChatting: boolean;
+  autoScan: boolean;
+  dealsCount: number;
+  gmailScansCount: number;
+  researchCount: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particlesRef = useRef<Particle[]>([]);
+  const nodesRef = useRef<ProcessNode[]>([]);
+  const animFrameRef = useRef<number>(0);
+  const timeRef = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      // Recalculate node positions on resize
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const radius = Math.min(rect.width, rect.height) * 0.3;
+      const nodeLabels = [
+        { label: "Claude AI", icon: "🧠", color: "#8b5cf6", glowColor: "rgba(139,92,246,0.3)" },
+        { label: "PDF Parser", icon: "📄", color: "#ef4444", glowColor: "rgba(239,68,68,0.3)" },
+        { label: "Market Data", icon: "📊", color: "#3b82f6", glowColor: "rgba(59,130,246,0.3)" },
+        { label: "Gmail Crawl", icon: "📧", color: "#10b981", glowColor: "rgba(16,185,129,0.3)" },
+        { label: "Founder Intel", icon: "🔍", color: "#f43f5e", glowColor: "rgba(244,63,94,0.3)" },
+        { label: "News Feed", icon: "📰", color: "#f59e0b", glowColor: "rgba(245,158,11,0.3)" },
+        { label: "Chatbot", icon: "💬", color: "#06b6d4", glowColor: "rgba(6,182,212,0.3)" },
+        { label: "Telegram", icon: "✈️", color: "#0ea5e9", glowColor: "rgba(14,165,233,0.3)" },
+      ];
+
+      nodesRef.current = nodeLabels.map((n, i) => {
+        const angle = (i / nodeLabels.length) * Math.PI * 2 - Math.PI / 2;
+        return {
+          ...n,
+          x: cx + Math.cos(angle) * radius,
+          y: cy + Math.sin(angle) * radius,
+          active: false,
+          pulsePhase: Math.random() * Math.PI * 2,
+        };
+      });
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Initialize particles
+    const rect = canvas.getBoundingClientRect();
+    particlesRef.current = [];
+    for (let i = 0; i < 120; i++) {
+      const nodeIdx = Math.floor(Math.random() * 8);
+      particlesRef.current.push({
+        x: Math.random() * rect.width,
+        y: Math.random() * rect.height,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5,
+        size: Math.random() * 3 + 1.5,
+        color: ["#8b5cf6", "#3b82f6", "#10b981", "#f43f5e", "#f59e0b", "#06b6d4", "#ef4444", "#0ea5e9"][nodeIdx],
+        alpha: Math.random() * 0.6 + 0.2,
+        life: Math.random() * 300,
+        maxLife: 300 + Math.random() * 200,
+        nodeIdx,
+      });
+    }
+
+    const animate = () => {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      timeRef.current += 0.016;
+      const t = timeRef.current;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw subtle grid
+      ctx.strokeStyle = "rgba(100, 130, 200, 0.04)";
+      ctx.lineWidth = 1;
+      const gridSize = 50;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      const nodes = nodesRef.current;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      // Draw connections between nodes (data flow lines)
+      for (let i = 0; i < nodes.length; i++) {
+        // Connect each node to center hub
+        const grad = ctx.createLinearGradient(nodes[i].x, nodes[i].y, cx, cy);
+        grad.addColorStop(0, nodes[i].color + "30");
+        grad.addColorStop(1, "rgba(139,92,246,0.05)");
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+
+        // Connect to next neighbor
+        const next = nodes[(i + 1) % nodes.length];
+        const lineAlpha = 0.08 + Math.sin(t * 2 + i) * 0.04;
+        ctx.strokeStyle = `rgba(140, 160, 220, ${lineAlpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(next.x, next.y);
+        ctx.stroke();
+      }
+
+      // Draw center hub
+      const hubPulse = 1 + Math.sin(t * 3) * 0.15;
+      const hubGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55 * hubPulse);
+      hubGlow.addColorStop(0, "rgba(139,92,246,0.25)");
+      hubGlow.addColorStop(0.5, "rgba(139,92,246,0.08)");
+      hubGlow.addColorStop(1, "rgba(139,92,246,0)");
+      ctx.fillStyle = hubGlow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 55 * hubPulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(139,92,246,0.15)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(139,92,246,0.4)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.font = "24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⚡", cx, cy);
+
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillStyle = "rgba(139,92,246,0.8)";
+      ctx.fillText("DILIGENT-AI", cx, cy + 46);
+
+      // Draw process nodes
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const pulse = 1 + Math.sin(t * 2.5 + node.pulsePhase) * 0.12;
+        const nodeRadius = 28 * pulse;
+
+        // Glow
+        const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, nodeRadius * 1.8);
+        glow.addColorStop(0, node.active ? node.glowColor : node.glowColor.replace("0.3", "0.1"));
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Circle bg
+        ctx.fillStyle = node.active
+          ? node.color + "25"
+          : "rgba(30, 40, 70, 0.4)";
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = node.active
+          ? node.color + "80"
+          : node.color + "30";
+        ctx.lineWidth = node.active ? 2.5 : 1.5;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Spinning arc for active nodes
+        if (node.active) {
+          ctx.strokeStyle = node.color + "90";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, nodeRadius + 6, t * 3 + i, t * 3 + i + Math.PI * 0.6);
+          ctx.stroke();
+        }
+
+        // Icon
+        ctx.font = "20px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(node.icon, node.x, node.y);
+
+        // Label
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillStyle = node.active
+          ? node.color
+          : "rgba(160, 170, 200, 0.6)";
+        ctx.fillText(node.label, node.x, node.y + nodeRadius + 16);
+      }
+
+      // Update and draw particles
+      const particles = particlesRef.current;
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        const targetNode = nodes[p.nodeIdx];
+        if (targetNode) {
+          // Slight gravitational pull toward their node
+          const dx = targetNode.x - p.x;
+          const dy = targetNode.y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 60) {
+            p.vx += (dx / dist) * 0.03;
+            p.vy += (dy / dist) * 0.03;
+          } else if (dist < 30) {
+            // Repel if too close
+            p.vx -= (dx / dist) * 0.05;
+            p.vy -= (dy / dist) * 0.05;
+          }
+          // Also pull toward center hub sometimes
+          const cdx = cx - p.x;
+          const cdy = cy - p.y;
+          const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+          p.vx += (cdx / cdist) * 0.005;
+          p.vy += (cdy / cdist) * 0.005;
+        }
+
+        // Damping
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life++;
+
+        // Wrap around
+        if (p.x < -10) p.x = w + 10;
+        if (p.x > w + 10) p.x = -10;
+        if (p.y < -10) p.y = h + 10;
+        if (p.y > h + 10) p.y = -10;
+
+        // Respawn if expired
+        if (p.life > p.maxLife) {
+          p.life = 0;
+          p.nodeIdx = Math.floor(Math.random() * 8);
+          p.color = ["#8b5cf6", "#3b82f6", "#10b981", "#f43f5e", "#f59e0b", "#06b6d4", "#ef4444", "#0ea5e9"][p.nodeIdx];
+          p.x = nodes[p.nodeIdx]?.x || Math.random() * w;
+          p.y = nodes[p.nodeIdx]?.y || Math.random() * h;
+          p.vx = (Math.random() - 0.5) * 2;
+          p.vy = (Math.random() - 0.5) * 2;
+        }
+
+        const fadeIn = Math.min(p.life / 30, 1);
+        const fadeOut = Math.max((p.maxLife - p.life) / 30, 0);
+        const alpha = p.alpha * Math.min(fadeIn, fadeOut);
+
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Draw traveling data packets along connections
+      for (let i = 0; i < nodes.length; i++) {
+        if (!nodes[i].active) continue;
+        const progress = (t * 0.5 + i * 0.3) % 1;
+        const px = nodes[i].x + (cx - nodes[i].x) * progress;
+        const py = nodes[i].y + (cy - nodes[i].y) * progress;
+
+        ctx.fillStyle = nodes[i].color;
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.arc(px, py, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animFrameRef.current);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  // Update node active states reactively
+  useEffect(() => {
+    const nodes = nodesRef.current;
+    if (nodes.length < 8) return;
+    nodes[0].active = isGenerating || isChatting; // Claude AI
+    nodes[1].active = isGenerating; // PDF Parser
+    nodes[2].active = isGenerating || isResearching; // Market Data
+    nodes[3].active = isCrawling || autoScan; // Gmail Crawl
+    nodes[4].active = isGenerating; // Founder Intel
+    nodes[5].active = isResearching; // News Feed
+    nodes[6].active = isChatting; // Chatbot
+    nodes[7].active = autoScan; // Telegram
+  }, [isGenerating, isCrawling, isResearching, isChatting, autoScan]);
+
+  return (
+    <div className="relative w-full h-full">
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+      />
+      {/* Status overlay cards */}
+      <div className="absolute bottom-6 left-6 right-6 flex gap-4 pointer-events-none">
+        <div className="rounded-xl border border-violet-500/20 bg-background/80 backdrop-blur-md px-5 py-4 flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`h-3 w-3 rounded-full ${isGenerating ? "bg-violet-400 animate-pulse" : "bg-violet-400/30"}`} />
+            <span className="text-base font-semibold">Memo Engine</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isGenerating ? "Generating analysis..." : `${dealsCount} deal${dealsCount !== 1 ? "s" : ""} analyzed`}
+          </p>
+        </div>
+        <div className="rounded-xl border border-emerald-500/20 bg-background/80 backdrop-blur-md px-5 py-4 flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`h-3 w-3 rounded-full ${isCrawling ? "bg-emerald-400 animate-pulse" : autoScan ? "bg-emerald-400/60 animate-pulse" : "bg-emerald-400/30"}`} />
+            <span className="text-base font-semibold">Gmail Agent</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isCrawling ? "Scanning inbox..." : autoScan ? `Auto-scan ON · ${gmailScansCount} scans` : `${gmailScansCount} scan${gmailScansCount !== 1 ? "s" : ""} completed`}
+          </p>
+        </div>
+        <div className="rounded-xl border border-blue-500/20 bg-background/80 backdrop-blur-md px-5 py-4 flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`h-3 w-3 rounded-full ${isResearching ? "bg-blue-400 animate-pulse" : "bg-blue-400/30"}`} />
+            <span className="text-base font-semibold">Research Feed</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isResearching ? "Querying sources..." : `${researchCount} search${researchCount !== 1 ? "es" : ""} cached`}
+          </p>
+        </div>
+        <div className="rounded-xl border border-cyan-500/20 bg-background/80 backdrop-blur-md px-5 py-4 flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`h-3 w-3 rounded-full ${isChatting ? "bg-cyan-400 animate-pulse" : "bg-cyan-400/30"}`} />
+            <span className="text-base font-semibold">Live Chatbot</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isChatting ? "Thinking..." : "Ready for questions"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [pdfFile, setPdfFile] = useState<UploadedFile | null>(null);
@@ -834,6 +1242,17 @@ export default function Home() {
                   <Badge variant="outline" className="ml-1 text-sm px-2.5 py-0.5">{researchResults.length}</Badge>
                 )}
               </button>
+              <button
+                onClick={() => setActiveTab("monitor")}
+                className={`flex items-center gap-2 px-6 py-3 text-base font-semibold border-b-2 transition-all -mb-[2px] ${
+                  activeTab === "monitor"
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
+                }`}
+              >
+                <Activity className="h-5 w-5" />
+                Monitor AI
+              </button>
             </div>
 
             {/* Contextual Header */}
@@ -867,6 +1286,19 @@ export default function Home() {
                   <Badge variant="outline" className="gap-2 text-base px-4 py-2">
                     <Sparkles className="h-4 w-4" />
                     {researchResults.length} search{researchResults.length !== 1 ? "es" : ""}
+                  </Badge>
+                </>
+              ) : activeTab === "monitor" ? (
+                <>
+                  <div>
+                    <h2 className="text-3xl font-bold tracking-tight">Monitor AI</h2>
+                    <p className="text-base text-muted-foreground mt-1">
+                      Live view of AI agents &amp; background processes
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="gap-2 text-base px-4 py-2 border-cyan-500/30 text-cyan-400">
+                    <Activity className="h-4 w-4" />
+                    Live
                   </Badge>
                 </>
               ) : (
@@ -1712,6 +2144,22 @@ export default function Home() {
                 </div>
               )}
             </div>
+          </div>
+          )}
+
+          {/* Monitor AI Content */}
+          {activeTab === "monitor" && (
+          <div className="flex-1 overflow-hidden relative bg-background">
+            <MonitorAICanvas
+              isGenerating={isGenerating}
+              isCrawling={isCrawling}
+              isResearching={isResearching}
+              isChatting={isChatting}
+              autoScan={autoScan}
+              dealsCount={deals.length}
+              gmailScansCount={gmailScans.length}
+              researchCount={researchResults.length}
+            />
           </div>
           )}
         </main>
