@@ -9,10 +9,9 @@
 
 import { NextResponse } from "next/server";
 import YahooFinance from "yahoo-finance2";
-import Anthropic from "@anthropic-ai/sdk";
+import { generateText } from "@/lib/gemini";
 
 const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
-const anthropic = new Anthropic();
 const AV_KEY = process.env.ALPHA_VANTAGE_API_KEY || "";
 const AV_BASE = "https://www.alphavantage.co/query";
 
@@ -165,13 +164,8 @@ async function generateAISummary(
     .join("\n");
 
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      messages: [
-        {
-          role: "user",
-          content: `You are a financial news analyst. Write a concise market briefing about "${query}" based on the data below. Use markdown formatting. Include sections: **Market Snapshot**, **Key Developments**, and **Outlook**. Be specific with numbers. Keep it under 400 words.
+    return await generateText(
+      `You are a financial news analyst. Write a concise market briefing about "${query}" based on the data below. Use markdown formatting. Include sections: **Market Snapshot**, **Key Developments**, and **Outlook**. Be specific with numbers. Keep it under 400 words.
 
 COMPANY DATA:
 ${companyContext || "No company data available."}
@@ -180,10 +174,8 @@ RECENT NEWS:
 ${newsContext || "No recent news found."}
 
 Write the briefing now:`,
-        },
-      ],
-    });
-    return response.content[0].type === "text" ? response.content[0].text : "";
+      { maxTokens: 1500 }
+    );
   } catch {
     return "AI summary unavailable.";
   }

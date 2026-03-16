@@ -1,8 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { generateText } from "./gemini";
 import { PitchDeckData } from "./pdf-parser";
 import { ParsedFinancials } from "./memo-generator";
-
-const anthropic = new Anthropic();
 
 export type IPFlag = {
   issue: string;
@@ -39,20 +37,6 @@ export type LegalScanResult = {
   summary: string;
 };
 
-async function callWithFallback(
-  params: Anthropic.MessageCreateParamsNonStreaming
-): Promise<Anthropic.Message> {
-  try {
-    return await anthropic.messages.create(params);
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("rate_limit") && params.model === "claude-sonnet-4-20250514") {
-      return await anthropic.messages.create({ ...params, model: "claude-opus-4-20250514" });
-    }
-    throw err;
-  }
-}
-
 /**
  * Run a comprehensive Legal & Cap Table Scan.
  * This runs a single focused prompt that covers IP, financials cross-validation,
@@ -72,13 +56,8 @@ export async function runLegalScan(
 - Summary: ${financials.rawSummary}`
     : "No separate financial spreadsheet was uploaded.";
 
-  const response = await callWithFallback({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 2048,
-    messages: [
-      {
-        role: "user",
-        content: `You are a senior legal and financial due diligence analyst at a top-tier VC firm. Perform a structured scan of this deal and return your findings as JSON.
+  const text = await generateText(
+    `You are a senior legal and financial due diligence analyst at a top-tier VC firm. Perform a structured scan of this deal and return your findings as JSON.
 
 ## PITCH DECK DATA
 - Company: ${pitchData.companyName}
@@ -141,13 +120,10 @@ ANALYSIS INSTRUCTIONS:
 4. **Missing Documents**: Generate a checklist of documents not provided but needed for proper diligence: articles of incorporation, IP assignment agreements, employment agreements, cap table, option pool details, financial audits, customer contracts, regulatory licenses.
 
 If an area has no issues, return an empty array for that field. Be conservative — flag things that warrant further investigation even if not definitive problems.`,
-      },
-    ],
-  });
+    { maxTokens: 2048 }
+  );
 
-  const text =
-    response.content[0].type === "text" ? response.content[0].text : "";
-  const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  const cleaned = text.replace(/\`\`\`json\n?/g, "").replace(/\`\`\`\n?/g, "").trim();
 
   try {
     return JSON.parse(cleaned) as LegalScanResult;

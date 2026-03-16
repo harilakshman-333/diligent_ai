@@ -1,7 +1,21 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { genAI } from "./gemini";
 import { PDFParse } from "pdf-parse";
 
-const anthropic = new Anthropic();
+const JSON_EXTRACT_PROMPT = `You are a VC analyst. Extract the following and return ONLY valid JSON (no markdown, no code fences):
+
+{
+  "companyName": "string",
+  "product": "one-sentence description",
+  "sector": "e.g. SaaS, FinTech, HealthTech",
+  "mainCompetitors": ["up to 3 public company tickers if mentioned, e.g. MSFT, CRM"],
+  "marketSize": "TAM figure from the deck, e.g. $10B",
+  "askAmount": "funding ask if stated, otherwise N/A",
+  "teamHighlights": "brief summary of founding team",
+  "keyMetricsClaimed": "any revenue/growth/user metrics the startup claims",
+  "summary": "2-3 sentence summary of what this startup does and why it matters"
+}
+
+If a field isn't found in the deck, use "N/A".`;
 
 export type PitchDeckData = {
   companyName: string;
@@ -21,107 +35,73 @@ export type PitchDeckResult = {
 };
 
 /**
- * Parse a pitch deck PDF using Claude's native PDF support.
- * Falls back to pdf-parse text extraction if the PDF is too large for base64.
+ * Parse a pitch deck PDF using Gemini's native PDF support.
+ * Falls back to pdf-parse text extraction if the PDF is too large.
  */
 export async function parsePitchDeck(pdfFile: File): Promise<PitchDeckResult> {
   const arrayBuffer = await pdfFile.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  // Claude supports PDFs up to ~32MB via base64
-  const MAX_PDF_SIZE = 30 * 1024 * 1024; // 30MB to be safe
+  const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB for Gemini inline data
 
-  let response;
+  let responseText = "";
   let rawText = "";
 
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
   if (buffer.length <= MAX_PDF_SIZE) {
-    // Primary path: send PDF directly to Claude
+    // Primary path: send PDF directly to Gemini
     const base64Pdf = buffer.toString("base64");
 
-    response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2048,
-      messages: [
+    const result = await model.generateContent({
+      contents: [
         {
           role: "user",
-          content: [
+          parts: [
             {
-              type: "document",
-              source: {
-                type: "base64",
-                media_type: "application/pdf",
+              inlineData: {
+                mimeType: "application/pdf",
                 data: base64Pdf,
               },
             },
             {
-              type: "text",
-              text: `You are a VC analyst. Extract the following from this pitch deck PDF and return ONLY valid JSON (no markdown, no code fences):
-
-{
-  "companyName": "string",
-  "product": "one-sentence description",
-  "sector": "e.g. SaaS, FinTech, HealthTech",
-  "mainCompetitors": ["up to 3 public company tickers if mentioned, e.g. MSFT, CRM"],
-  "marketSize": "TAM figure from the deck, e.g. $10B",
-  "askAmount": "funding ask if stated, otherwise N/A",
-  "teamHighlights": "brief summary of founding team",
-  "keyMetricsClaimed": "any revenue/growth/user metrics the startup claims",
-  "summary": "2-3 sentence summary of what this startup does and why it matters"
-}
-
-If a field isn't found in the deck, use "N/A".`,
+              text: JSON_EXTRACT_PROMPT,
             },
           ],
         },
       ],
+      generationConfig: { maxOutputTokens: 2048 },
     });
+
+    responseText = result.response.text();
   } else {
-    // Fallback: extract text with pdf-parse, then send text to Claude
+    // Fallback: extract text with pdf-parse, then send text to Gemini
     const parser = new PDFParse({ data: new Uint8Array(buffer) });
     const textResult = await parser.getText();
     rawText = textResult.text.slice(0, 50000);
-    const text = rawText; // Limit text length
 
-    response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2048,
-      messages: [
+    const result = await model.generateContent({
+      contents: [
         {
           role: "user",
-          content: `You are a VC analyst. Here is the extracted text from a startup pitch deck:
-
----
-${text}
----
-
-Extract the following and return ONLY valid JSON (no markdown, no code fences):
-
-{
-  "companyName": "string",
-  "product": "one-sentence description",
-  "sector": "e.g. SaaS, FinTech, HealthTech",
-  "mainCompetitors": ["up to 3 public company tickers if mentioned, e.g. MSFT, CRM"],
-  "marketSize": "TAM figure from the deck, e.g. $10B",
-  "askAmount": "funding ask if stated, otherwise N/A",
-  "teamHighlights": "brief summary of founding team",
-  "keyMetricsClaimed": "any revenue/growth/user metrics the startup claims",
-  "summary": "2-3 sentence summary of what this startup does and why it matters"
-}
-
-If a field isn't found in the deck, use "N/A".`,
+          parts: [
+            {
+              text: `Here is the extracted text from a startup pitch deck:\n\n---\n${rawText}\n---\n\n${JSON_EXTRACT_PROMPT}`,
+            },
+          ],
         },
       ],
+      generationConfig: { maxOutputTokens: 2048 },
     });
+
+    responseText = result.response.text();
   }
 
-  const text =
-    response.content[0].type === "text" ? response.content[0].text : "";
-
   // Parse the JSON response, stripping any accidental markdown fences
-  const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  const cleaned = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
   const parsed = JSON.parse(cleaned) as PitchDeckData;
 
-  // Claude sometimes returns mainCompetitors as a string instead of array
+  // Gemini sometimes returns mainCompetitors as a string instead of array
   if (!Array.isArray(parsed.mainCompetitors)) {
     parsed.mainCompetitors = parsed.mainCompetitors ? [String(parsed.mainCompetitors)] : [];
   }
