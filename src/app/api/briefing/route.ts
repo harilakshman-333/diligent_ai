@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText } from "@/lib/gemini";
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic();
 
 type BriefingDeal = {
   companyName: string;
@@ -48,8 +50,13 @@ export async function POST(request: NextRequest) {
       )
       .join("\n\n");
 
-    const briefing = await generateText(
-      `You are a VC deal flow analyst. Compile the following analyzed pitch decks into a concise "Morning Deal Flow Briefing" that a partner can read in 60 seconds.
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      messages: [
+        {
+          role: "user",
+          content: `You are a VC deal flow analyst. Compile the following analyzed pitch decks into a concise "Morning Deal Flow Briefing" that a partner can read in 60 seconds.
 
 Date: ${date}
 Total emails scanned: ${totalEmails}
@@ -98,10 +105,14 @@ Rules:
 - Include ALL deals provided
 - If a section has 0 deals, omit it entirely
 - Use emoji numbers (1️⃣ 2️⃣ 3️⃣ etc.) for numbering, continuing across sections`,
-      { maxTokens: 2048 }
-    );
+        },
+      ],
+    });
 
-    const briefingText = briefing || "Failed to generate briefing.";
+    const briefing =
+      response.content[0].type === "text"
+        ? response.content[0].text
+        : "Failed to generate briefing.";
 
     // Build a structured deal log
     const dealLog = deals.map((d) => ({
@@ -114,7 +125,7 @@ Rules:
 
     return NextResponse.json({
       success: true,
-      briefing: briefingText,
+      briefing,
       dealCount: deals.length,
       dealLog,
     });

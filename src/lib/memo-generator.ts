@@ -1,6 +1,8 @@
-import { generateText } from "./gemini";
+import Anthropic from "@anthropic-ai/sdk";
 import { PitchDeckData } from "./pdf-parser";
 import { CombinedMarketData } from "./financial-data";
+
+const anthropic = new Anthropic();
 
 export type ParsedFinancials = {
   monthlyBurnRate: string;
@@ -17,8 +19,13 @@ export async function parseFinancials(
   fileContent: string,
   fileName: string
 ): Promise<ParsedFinancials> {
-  const text = await generateText(
-    `You are a financial analyst. Here is the content of a startup's financial spreadsheet (${fileName}):
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `You are a financial analyst. Here is the content of a startup's financial spreadsheet (${fileName}):
 
 ---
 ${fileContent.slice(0, 30000)}
@@ -35,10 +42,13 @@ Analyze this data and return ONLY valid JSON (no markdown, no code fences):
 }
 
 If a field cannot be determined, use "N/A" and explain briefly in rawSummary.`,
-    { maxTokens: 1024 }
-  );
+      },
+    ],
+  });
 
-  const cleaned = text.replace(/\`\`\`json\n?/g, "").replace(/\`\`\`\n?/g, "").trim();
+  const text =
+    response.content[0].type === "text" ? response.content[0].text : "";
+  const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
   return JSON.parse(cleaned) as ParsedFinancials;
 }
 
@@ -64,8 +74,13 @@ export async function generateMemo(
     )
     .join("\n");
 
-  const text = await generateText(
-    `You are a senior VC analyst at a top-tier venture capital firm. Write a professional investment memo based on the following data.
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: `You are a senior VC analyst at a top-tier venture capital firm. Write a professional investment memo based on the following data.
 
 ## PITCH DECK ANALYSIS
 - Company: ${pitchData.companyName}
@@ -118,9 +133,12 @@ Write the investment memo in Markdown with these sections:
 (Clear recommendation with reasoning. If investing, suggest terms/conditions.)
 
 Be specific and data-driven. Reference actual numbers from the data above. Be honest about both strengths and red flags. This memo should read like it came from a Goldman Sachs analyst, not a chatbot.`,
-    { maxTokens: 4096 }
-  );
+      },
+    ],
+  });
 
+  const text =
+    response.content[0].type === "text" ? response.content[0].text : "";
   return text;
 }
 
@@ -146,8 +164,13 @@ export async function generatePitchOnlyMemo(
     )
     .join("\n");
 
-  const text = await generateText(
-    `You are a senior VC analyst. Write a quick-turn investment memo based ONLY on a pitch deck and public market comparables. No startup financials are available — flag this as a limitation.
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 3000,
+    messages: [
+      {
+        role: "user",
+        content: `You are a senior VC analyst. Write a quick-turn investment memo based ONLY on a pitch deck and public market comparables. No startup financials are available — flag this as a limitation.
 
 ## PITCH DECK ANALYSIS
 - Company: ${pitchData.companyName}
@@ -193,8 +216,11 @@ Write a concise investment memo in Markdown:
 (What a VC should do: request financials, schedule call, pass, etc.)
 
 Keep it punchy and data-driven — this is a quick read on a phone screen. Reference real numbers.`,
-    { maxTokens: 3000 }
-  );
+      },
+    ],
+  });
 
+  const text =
+    response.content[0].type === "text" ? response.content[0].text : "";
   return text;
 }

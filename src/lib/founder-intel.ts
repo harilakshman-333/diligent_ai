@@ -1,4 +1,6 @@
-import { genAI } from "./gemini";
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic();
 
 export type FounderProfile = {
   name: string;
@@ -27,7 +29,7 @@ export type FounderIntelResult = {
 };
 
 /**
- * Run "Founder Intel" enrichment using Gemini with Google Search grounding.
+ * Run "Founder Intel" enrichment using Claude web search.
  *
  * Searches the web for founder backgrounds, prior ventures,
  * adverse media, and cross-references against public registries.
@@ -37,19 +39,21 @@ export async function runFounderIntel(
   teamHighlights: string,
   sector: string
 ): Promise<FounderIntelResult> {
-  // Use Gemini with Google Search grounding tool
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    tools: [{ googleSearch: {} } as never],
-  });
-
-  const result = await model.generateContent({
-    contents: [
+  // Step 1: Use Claude with web search to research founders + company
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4096,
+    tools: [
+      {
+        type: "web_search_20250305",
+        name: "web_search",
+        max_uses: 10,
+      },
+    ],
+    messages: [
       {
         role: "user",
-        parts: [
-          {
-            text: `You are a VC due diligence analyst performing a "Founder Intel" background check. Use web search extensively to research the following startup and its founders.
+        content: `You are a VC due diligence analyst performing a "Founder Intel" background check. Use web search extensively to research the following startup and its founders.
 
 ## TARGET COMPANY
 - Company Name: ${companyName}
@@ -114,14 +118,17 @@ Guidelines:
 - If you cannot find information about a founder, flag that as a yellow concern (unverifiable claims)
 - Be thorough but fair — not finding negative info is a good sign
 - Include actual URLs in the sources array`,
-          },
-        ],
       },
     ],
-    generationConfig: { maxOutputTokens: 4096 },
   });
 
-  const resultText = result.response.text();
+  // Extract the final text block from the response (after all tool use)
+  let resultText = "";
+  for (const block of response.content) {
+    if (block.type === "text") {
+      resultText = block.text;
+    }
+  }
 
   // Parse the JSON response
   const cleaned = resultText
@@ -132,7 +139,7 @@ Guidelines:
   try {
     return JSON.parse(cleaned) as FounderIntelResult;
   } catch {
-    // If Gemini didn't return clean JSON, build a minimal result
+    // If Claude didn't return clean JSON, build a minimal result
     return {
       founders: [],
       companyCheck: {
