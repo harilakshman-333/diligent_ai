@@ -1,3 +1,18 @@
+## Table of Contents
+
+- [Diligent-AI: Automated VC Due Diligence Platform](#diligent-ai-automated-vc-due-diligence-platform)
+	- [Technical Overview](#technical-overview)
+	- [Key Features](#key-features)
+	- [Architecture](#architecture)
+	- [Getting Started](#getting-started)
+	- [For More Details](#for-more-details)
+- [Backend Architecture & Data Flow](#backend-architecture--data-flow)
+	- [Overview](#overview)
+	- [Data Flow](#data-flow)
+	- [Key Components](#key-components)
+	- [Networking & IP](#networking--ip)
+	- [Example Data Flow](#example-data-flow)
+
 ### Backend Architecture & Data Flow
 
 #### Overview
