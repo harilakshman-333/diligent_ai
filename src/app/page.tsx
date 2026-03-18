@@ -995,51 +995,53 @@ export default function Home() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background font-sans text-base">
       {/* ===== TOP BAR ===== */}
-      <header className="flex h-[72px] shrink-0 items-center justify-between border-b-2 border-border/50 bg-card/50 px-10">
-        <div className="flex items-center gap-5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white dark:bg-white">
-            <BrainCircuit className="h-7 w-7 text-black" />
+      <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-border/20 panel px-8 z-10 relative">
+        <div className="flex items-center gap-4">
+          {/* Logo mark */}
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-[0_0_20px_rgba(124,58,237,0.3)]">
+            <BrainCircuit className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Diligent<span className="text-foreground/40">-AI</span>
-          </h1>
-          <Separator orientation="vertical" className="mx-3 h-7" />
-          <span className="text-base font-semibold uppercase tracking-wider text-muted-foreground">Automated VC Analyst</span>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              Diligent<span className="gradient-text">-AI</span>
+            </h1>
+            <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[#a78bfa] hidden sm:inline ml-2">VC Analyst</span>
+          </div>
         </div>
         <div className="flex items-center gap-4">
-          {/* Theme Toggle */}
-          <div className="flex items-center rounded-full border border-border/40 bg-muted/20 p-1">
+          {/* Theme Toggle — icon only */}
+          <div className="flex items-center rounded-full border border-border/30 bg-muted/10 p-1 gap-0.5">
             {[
-              { mode: "light" as const, icon: Sun, label: "Light" },
-              { mode: "system" as const, icon: Monitor, label: "System" },
-              { mode: "dark" as const, icon: Moon, label: "Dark" },
-            ].map(({ mode, icon: Icon, label }) => (
+              { mode: "light" as const, icon: Sun },
+              { mode: "system" as const, icon: Monitor },
+              { mode: "dark" as const, icon: Moon },
+            ].map(({ mode, icon: Icon }) => (
               <button
                 key={mode}
                 onClick={() => setTheme(mode)}
-                title={label}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-base font-medium transition-all ${
+                title={mode.charAt(0).toUpperCase() + mode.slice(1)}
+                className={`flex items-center justify-center rounded-full p-2 transition-all ${
                   theme === mode
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary/90 text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                {label}
+                <Icon className="h-4 w-4" />
               </button>
             ))}
           </div>
-          <Badge variant="outline" className="gap-2 rounded-full border-emerald-500/30 bg-emerald-500/5 px-4 py-2 text-base font-medium text-emerald-400">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <div className="h-5 w-px bg-border/40" />
+          <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-3 py-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            Live Data
-          </Badge>
-          <Badge variant="outline" className="gap-2 rounded-full border-violet-500/30 bg-violet-500/5 px-4 py-2 text-base font-medium text-violet-400">
-            <Zap className="h-5 w-5" />
-            Claude Sonnet
-          </Badge>
+            <span className="text-sm font-medium text-emerald-400">Live Data</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/8 px-3 py-1.5">
+            <Zap className="h-3.5 w-3.5 text-violet-400" />
+            <span className="text-sm font-medium text-violet-400">Claude Sonnet</span>
+          </div>
         </div>
       </header>
 
@@ -1047,41 +1049,41 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* ===== LEFT SIDEBAR: Upload + Deal History ===== */}
-        <aside className="flex w-[400px] shrink-0 flex-col border-r-2 border-border/50 bg-card/30">
+        <aside className="flex w-[380px] shrink-0 flex-col border-r border-border/20 panel z-0">
           {/* Upload Section */}
-          <div className="flex-1 overflow-y-auto p-7 space-y-0">
+          <div className="flex-1 overflow-y-auto p-6 space-y-0">
 
             {/* ── SECTION: Pitch Deck ── */}
             <div className="pb-6">
-              <h3 className="text-lg font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-[#a78bfa] mb-4 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
                 Pitch Deck
               </h3>
               {pdfFile ? (
-                <div className="flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-5">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-500/15">
-                      <FileText className="h-6 w-6 text-red-400" />
+                <div className="flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-4 backdrop-blur-md">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/20">
+                      <FileText className="h-5 w-5 text-red-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-lg font-semibold truncate">{pdfFile.name}</p>
-                      <p className="text-base text-muted-foreground">Pitch Deck</p>
+                      <p className="text-sm font-bold text-white truncate">{pdfFile.name}</p>
+                      <p className="text-xs text-red-200/70">Pitch Deck · PDF</p>
                     </div>
                   </div>
-                  <button onClick={() => setPdfFile(null)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
-                    <X className="h-5 w-5" />
+                  <button onClick={() => setPdfFile(null)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-red-500/20 hover:text-white transition-colors">
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div
                   onDrop={(e) => handleDrop(e, "pdf")}
                   onDragOver={handleDragOver}
-                  className="group cursor-pointer rounded-xl border-2 border-dashed border-border/50 bg-muted/10 px-5 py-12 text-center transition-all hover:border-red-400/40 hover:bg-red-500/5"
+                  className="drop-zone flex flex-col items-center justify-center px-5 py-12 cursor-pointer"
                 >
-                  <Upload className="mx-auto mb-4 h-8 w-8 text-muted-foreground/50 transition-colors group-hover:text-red-400" />
-                  <p className="text-lg font-medium text-muted-foreground">Drop pitch deck PDF</p>
-                  <label className="mt-2 block cursor-pointer text-base font-medium text-red-400 hover:underline">
-                    or browse
+                  <Upload className="mb-4 h-8 w-8 text-[#6b7fa3] transition-colors group-hover:text-[#a78bfa]" />
+                  <p className="text-base font-semibold text-[#e8eaf2]">Drop pitch deck PDF</p>
+                  <label className="mt-2 block cursor-pointer text-sm font-bold text-[#a78bfa] hover:underline">
+                    or browse files
                     <input type="file" accept=".pdf" className="hidden" onChange={(e) => handleFileSelect(e, "pdf")} />
                   </label>
                 </div>
@@ -1089,39 +1091,39 @@ export default function Home() {
             </div>
 
             {/* ── DIVIDER ── */}
-            <div className="border-t-2 border-border/30 my-0" />
+            <div className="border-t border-border/20 my-2" />
 
             {/* ── SECTION: Financials ── */}
             <div className="py-6">
-              <h3 className="text-lg font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                <FileSpreadsheet className="h-5 w-5" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-[#a78bfa] mb-4 flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
                 Financials
               </h3>
               {spreadsheetFile ? (
-                <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-5">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15">
-                      <FileSpreadsheet className="h-6 w-6 text-emerald-400" />
+                <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 backdrop-blur-md">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20">
+                      <FileSpreadsheet className="h-5 w-5 text-emerald-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-lg font-semibold truncate">{spreadsheetFile.name}</p>
-                      <p className="text-base text-muted-foreground">Financials</p>
+                      <p className="text-sm font-bold text-white truncate">{spreadsheetFile.name}</p>
+                      <p className="text-xs text-emerald-200/70">Financials · CSV/Excel</p>
                     </div>
                   </div>
-                  <button onClick={() => setSpreadsheetFile(null)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
-                    <X className="h-5 w-5" />
+                  <button onClick={() => setSpreadsheetFile(null)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-emerald-500/20 hover:text-white transition-colors">
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div
                   onDrop={(e) => handleDrop(e, "spreadsheet")}
                   onDragOver={handleDragOver}
-                  className="group cursor-pointer rounded-xl border-2 border-dashed border-border/50 bg-muted/10 px-5 py-12 text-center transition-all hover:border-emerald-400/40 hover:bg-emerald-500/5"
+                  className="drop-zone flex flex-col items-center justify-center px-5 py-10 cursor-pointer"
                 >
-                  <Upload className="mx-auto mb-4 h-8 w-8 text-muted-foreground/50 transition-colors group-hover:text-emerald-400" />
-                  <p className="text-lg font-medium text-muted-foreground">Drop CSV / Excel</p>
-                  <label className="mt-2 block cursor-pointer text-base font-medium text-emerald-400 hover:underline">
-                    or browse
+                  <Upload className="mb-4 h-8 w-8 text-[#6b7fa3] transition-colors group-hover:text-emerald-400" />
+                  <p className="text-base font-semibold text-[#e8eaf2]">Drop CSV / Excel</p>
+                  <label className="mt-2 block cursor-pointer text-sm font-bold text-emerald-400 hover:underline">
+                    or browse files
                     <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={(e) => handleFileSelect(e, "spreadsheet")} />
                   </label>
                 </div>
@@ -1129,37 +1131,40 @@ export default function Home() {
             </div>
 
             {/* ── DIVIDER ── */}
-            <div className="border-t-2 border-border/30 my-0" />
+            <div className="border-t border-border/20 my-2" />
 
             {/* ── SECTION: Generate ── */}
             <div className="py-6">
-              <h3 className="text-lg font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-[#a78bfa] mb-4 flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4" />
                 Analyze
               </h3>
-              <Button
-                size="lg"
-                className="w-full gap-3 rounded-xl text-lg font-bold py-8 shadow-md shadow-primary/10"
+              <button
+                className={`w-full py-4 text-lg flex items-center justify-center gap-3 ${
+                  !pdfFile || isGenerating
+                    ? "rounded-xl border border-border/30 bg-muted/20 text-muted-foreground/50 cursor-not-allowed"
+                    : "btn-gradient"
+                }`}
                 disabled={!pdfFile || isGenerating}
                 onClick={handleGenerate}
               >
                 {isGenerating ? (
                   <>
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    Generating...
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Generating AI Memo...
                   </>
                 ) : (
                   <>
-                    <BrainCircuit className="h-6 w-6" />
+                    <BrainCircuit className="h-5 w-5" />
                     {spreadsheetFile ? "Full Analysis" : pdfFile ? "Quick Analysis" : "Generate Memo"}
                   </>
                 )}
-              </Button>
+              </button>
 
               {pdfFile && !isGenerating && !activeMemo && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4 mt-4">
+                <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 mt-4 backdrop-blur-sm">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
-                  <p className="text-base font-medium text-emerald-400">
+                  <p className="text-sm font-semibold text-emerald-400">
                     {spreadsheetFile ? "Ready for full analysis" : "Ready — add CSV for full memo"}
                   </p>
                 </div>
@@ -1170,50 +1175,50 @@ export default function Home() {
             {deals.length > 0 && (
               <>
                 {/* ── DIVIDER ── */}
-                <div className="border-t-2 border-border/30 my-0" />
+                <div className="border-t border-border/20 my-0" />
 
-                <div className="py-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <Clock className="h-5 w-5" />
+                <div className="py-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5" />
                       Deals
                     </h3>
-                    <Badge variant="outline" className="text-sm px-3 py-1">{deals.length}</Badge>
+                    <span className="rounded-full border border-border/30 bg-muted/20 px-2 py-0.5 text-xs font-semibold text-muted-foreground">{deals.length}</span>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {deals.map((deal, index) => (
                       <button
                         key={deal.id}
                         onClick={() => setActiveDealIndex(index)}
-                        className={`w-full flex items-center justify-between rounded-xl border px-5 py-4 text-left transition-all hover:bg-muted/40 ${
+                        className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:bg-muted/20 ${
                           activeDealIndex === index
-                            ? "border-violet-500/40 bg-violet-500/10"
-                            : "border-border/20 bg-transparent"
+                            ? "border-violet-500/30 bg-violet-500/8"
+                            : "border-border/15 bg-transparent"
                         }`}
                       >
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-base font-semibold truncate">{deal.companyName}</p>
-                            <p className="text-base text-muted-foreground">
-                              {deal.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {deal.mode === "full" ? "Full" : "Pitch"}
-                            </p>
-                          </div>
+                        {/* Verdict accent bar */}
+                        <div className={`h-8 w-1 shrink-0 rounded-full ${
+                          deal.verdict === "STRONG BUY" ? "bg-emerald-400"
+                            : deal.verdict === "BUY" ? "bg-green-400"
+                            : deal.verdict === "HOLD" ? "bg-amber-400"
+                            : deal.verdict === "PASS" ? "bg-red-400"
+                            : "bg-muted-foreground/30"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate">{deal.companyName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {deal.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {deal.mode === "full" ? "Full" : "Pitch"}
+                          </p>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={`shrink-0 text-base font-bold px-3 py-1.5 ${
-                            deal.verdict === "STRONG BUY" ? "border-emerald-500/40 text-emerald-400"
-                              : deal.verdict === "BUY" ? "border-green-500/40 text-green-400"
-                              : deal.verdict === "HOLD" ? "border-amber-500/40 text-amber-400"
-                              : deal.verdict === "PASS" ? "border-red-500/40 text-red-400"
-                              : "border-border/40 text-muted-foreground"
-                          }`}
-                        >
+                        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-bold ${
+                          deal.verdict === "STRONG BUY" ? "border-emerald-500/40 text-emerald-400"
+                            : deal.verdict === "BUY" ? "border-green-500/40 text-green-400"
+                            : deal.verdict === "HOLD" ? "border-amber-500/40 text-amber-400"
+                            : deal.verdict === "PASS" ? "border-red-500/40 text-red-400"
+                            : "border-border/40 text-muted-foreground"
+                        }`}>
                           {deal.verdict}
-                        </Badge>
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -1223,160 +1228,152 @@ export default function Home() {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="border-t-2 border-border/40 px-6 py-4">
-            <p className="text-base text-muted-foreground/50 text-center">Edinburgh AI Hackathon 2026</p>
+          <div className="border-t border-border/20 px-6 py-3">
+            <p className="text-xs text-muted-foreground/30 text-center tracking-wider">Edinburgh AI Hackathon 2026</p>
           </div>
         </aside>
 
         {/* ===== CENTER: Tabbed Content ===== */}
-        <main className="flex flex-1 flex-col overflow-hidden">
-          {/* Tab Bar + Header */}
-          <div className="border-b-2 border-border/40">
+        <main className="flex flex-1 flex-col overflow-hidden relative z-0">
+          
+          {/* Tab Bar Container */}
+          <div className="panel border-x-0 border-t-0 bg-background/50 backdrop-blur-xl">
             {/* Tabs */}
-            <div className="flex items-center gap-0 px-10 pt-4">
+            <div className="flex items-center gap-2 px-8 pt-5 pb-1">
               <button
                 onClick={() => setActiveTab("memo")}
-                className={`flex items-center gap-2 px-6 py-3 text-base font-semibold border-b-2 transition-all -mb-[2px] ${
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-full transition-all ${
                   activeTab === "memo"
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
+                    ? "tab-active"
+                    : "tab-inactive"
                 }`}
               >
-                <FileText className="h-5 w-5" />
+                <FileText className="h-4 w-4" />
                 Investment Memo
               </button>
               <button
                 onClick={() => setActiveTab("gmail")}
-                className={`flex items-center gap-2 px-6 py-3 text-base font-semibold border-b-2 transition-all -mb-[2px] ${
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-full transition-all ${
                   activeTab === "gmail"
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
+                    ? "tab-active"
+                    : "tab-inactive"
                 }`}
               >
-                <Mail className="h-5 w-5" />
+                <Mail className="h-4 w-4" />
                 Gmail Updates
                 {gmailScans.length > 0 && (
-                  <Badge variant="outline" className="ml-1 text-sm px-2.5 py-0.5">{gmailScans.length}</Badge>
+                  <span className="ml-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[11px] font-black text-blue-400">{gmailScans.length}</span>
                 )}
               </button>
               <button
                 onClick={() => setActiveTab("research")}
-                className={`flex items-center gap-2 px-6 py-3 text-base font-semibold border-b-2 transition-all -mb-[2px] ${
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-full transition-all ${
                   activeTab === "research"
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
+                    ? "tab-active"
+                    : "tab-inactive"
                 }`}
               >
-                <Newspaper className="h-5 w-5" />
+                <Newspaper className="h-4 w-4" />
                 Stay Tuned
                 {researchResults.length > 0 && (
-                  <Badge variant="outline" className="ml-1 text-sm px-2.5 py-0.5">{researchResults.length}</Badge>
+                  <span className="ml-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[11px] font-black text-blue-400">{researchResults.length}</span>
                 )}
               </button>
               <button
                 onClick={() => setActiveTab("monitor")}
-                className={`flex items-center gap-2 px-6 py-3 text-base font-semibold border-b-2 transition-all -mb-[2px] ${
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-full transition-all ${
                   activeTab === "monitor"
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/60"
+                    ? "tab-active"
+                    : "tab-inactive"
                 }`}
               >
-                <Activity className="h-5 w-5" />
+                <Activity className="h-4 w-4" />
                 Monitor AI
               </button>
             </div>
 
             {/* Contextual Header */}
-            <div className="flex items-center justify-between px-10 py-5">
+            <div className="flex items-center justify-between px-6 py-3">
               {activeTab === "memo" ? (
                 <>
                   <div>
-                    <h2 className="text-3xl font-bold tracking-tight">
+                    <h2 className="text-lg font-bold tracking-tight">
                       {activeDeal ? activeDeal.companyName : "Investment Memo"}
                     </h2>
-                    <p className="text-base text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {activeDeal
-                        ? `${activeDeal.verdict} · ${activeDeal.mode === "full" ? "Full Analysis" : "Pitch-Only Analysis"}`
+                        ? `${activeDeal.verdict} · ${activeDeal.mode === "full" ? "Full Analysis" : "Pitch-Only"}`
                         : "Upload a pitch deck to generate a memo"}
                     </p>
                   </div>
                   {deals.length > 0 && !isGenerating && (
-                    <Badge variant="outline" className="gap-2 text-base px-4 py-2">
+                    <span className="text-xs font-semibold text-muted-foreground/60 border border-border/20 rounded-full px-2.5 py-1">
                       {deals.length} deal{deals.length !== 1 ? "s" : ""}
-                    </Badge>
+                    </span>
                   )}
                 </>
               ) : activeTab === "research" ? (
                 <>
                   <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Stay Tuned</h2>
-                    <p className="text-base text-muted-foreground mt-1">
-                      Search any company or topic for live market data &amp; news
-                    </p>
+                    <h2 className="text-lg font-bold tracking-tight">Stay Tuned</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Live market data &amp; news for any company or topic</p>
                   </div>
-                  <Badge variant="outline" className="gap-2 text-base px-4 py-2">
-                    <Sparkles className="h-4 w-4" />
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 border border-violet-500/20 rounded-full px-2.5 py-1">
+                    <Sparkles className="h-3 w-3" />
                     {researchResults.length} search{researchResults.length !== 1 ? "es" : ""}
-                  </Badge>
+                  </span>
                 </>
               ) : activeTab === "monitor" ? (
                 <>
                   <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Monitor AI</h2>
-                    <p className="text-base text-muted-foreground mt-1">
-                      Live view of AI agents &amp; background processes
-                    </p>
+                    <h2 className="text-lg font-bold tracking-tight">Monitor AI</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Live view of AI agents &amp; background processes</p>
                   </div>
-                  <Badge variant="outline" className="gap-2 text-base px-4 py-2 border-cyan-500/30 text-cyan-400">
-                    <Activity className="h-4 w-4" />
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400 border border-cyan-500/20 rounded-full px-2.5 py-1">
+                    <Activity className="h-3 w-3 animate-pulse" />
                     Live
-                  </Badge>
+                  </span>
                 </>
               ) : (
                 <>
                   <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Gmail Updates</h2>
-                    <p className="text-base text-muted-foreground mt-1">
+                    <h2 className="text-lg font-bold tracking-tight">Gmail Updates</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {gmailConfigured
                         ? `Connected as ${gmailUser} · ${gmailDeals.length} deals found`
                         : "Configure Gmail in .env.local to enable inbox crawling"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      size="lg"
-                      className="gap-3 rounded-xl text-base font-bold px-6 py-5"
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                        isCrawling || !gmailConfigured
+                          ? "bg-muted/20 text-muted-foreground/40 cursor-not-allowed"
+                          : "bg-gradient-to-r from-violet-600 to-blue-600 text-white hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-violet-500/20"
+                      }`}
                       disabled={isCrawling || !gmailConfigured}
                       onClick={handleGmailCrawl}
                     >
                       {isCrawling ? (
-                        <>
-                          <RefreshCw className="h-5 w-5 animate-spin" />
-                          Scanning...
-                        </>
+                        <><RefreshCw className="h-3.5 w-3.5 animate-spin" />Scanning...</>
                       ) : (
-                        <>
-                          <Inbox className="h-5 w-5" />
-                          Scan Inbox Now
-                        </>
+                        <><Inbox className="h-3.5 w-3.5" />Scan Now</>
                       )}
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant={autoScan ? "default" : "outline"}
-                      className={`gap-2 rounded-xl text-base font-bold px-5 py-5 ${
+                    </button>
+                    <button
+                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
                         autoScan
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                          : ""
-                      }`}
+                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                          : "border-border/30 text-muted-foreground hover:bg-muted/20"
+                      } ${!gmailConfigured ? "opacity-40 cursor-not-allowed" : ""}`}
                       disabled={!gmailConfigured}
                       onClick={() => setAutoScan((prev) => !prev)}
                     >
-                      <Timer className={`h-5 w-5 ${autoScan ? "animate-pulse" : ""}`} />
+                      <Timer className={`h-3.5 w-3.5 ${autoScan ? "animate-pulse" : ""}`} />
                       {autoScan ? "Auto: ON" : "Auto: OFF"}
-                    </Button>
+                    </button>
                     {autoScan && (
-                      <span className="text-sm text-emerald-400 font-medium">every 2 min</span>
+                      <span className="text-[10px] text-emerald-400 font-medium">every 2 min</span>
                     )}
                   </div>
                 </>
@@ -1390,7 +1387,7 @@ export default function Home() {
             <div className="mx-auto max-w-4xl px-10 py-10">
               {activeMemo ? (
                 <>
-                <article className="prose dark:prose-invert prose-xl max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:border-b-2 prose-h1:border-border/30 prose-h1:pb-5 prose-h1:mb-8 prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-5 prose-h3:text-2xl prose-p:text-xl prose-p:leading-relaxed prose-p:text-foreground/90 prose-li:text-xl prose-li:text-foreground/90 prose-strong:text-foreground prose-table:text-lg prose-th:text-left prose-th:p-4 prose-th:bg-muted/50 prose-td:p-4 prose-td:border-t prose-td:border-border/30 prose-hr:border-border/30 prose-blockquote:border-l-violet-500 prose-blockquote:bg-violet-500/5 prose-blockquote:py-2 prose-blockquote:px-8 prose-blockquote:rounded-r-lg prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-lg prose-code:font-mono">
+                <article className="prose dark:prose-invert prose-base max-w-none prose-headings:font-bold prose-headings:text-white prose-h1:text-4xl prose-h1:border-b prose-h1:border-border/30 prose-h1:pb-5 prose-h1:mb-8 prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-5 prose-h3:text-xl prose-p:text-base prose-p:leading-relaxed prose-p:text-[#e8eaf2] prose-li:text-base prose-li:text-[#e8eaf2] prose-strong:text-white prose-table:text-sm prose-th:text-left prose-th:p-4 prose-th:bg-white/5 prose-td:p-4 prose-td:border-t prose-td:border-white/10 prose-hr:border-white/10 prose-blockquote:border-l-[#a78bfa] prose-blockquote:bg-white/5 prose-blockquote:py-2 prose-blockquote:px-8 prose-blockquote:rounded-r-lg prose-code:bg-white/10 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-mono">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {activeMemo}
                   </ReactMarkdown>
@@ -1410,37 +1407,37 @@ export default function Home() {
                     <div className="grid gap-6">
 
                       {/* Claude AI - Pitch Deck Parsing */}
-                      <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-6">
+                      <div className="rounded-xl panel p-6">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/15">
-                            <BrainCircuit className="h-5 w-5 text-violet-400" />
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                            <BrainCircuit className="h-6 w-6 text-violet-400" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold">Claude AI — Pitch Deck Analysis</h3>
-                            <p className="text-base text-muted-foreground">Extracted structured data from the uploaded PDF</p>
+                            <h3 className="text-lg font-bold text-white">Claude AI — Pitch Deck Analysis</h3>
+                            <p className="text-sm text-[#8b9fc4]">Extracted structured data from the uploaded PDF</p>
                           </div>
                         </div>
                         {activeDeal.sourceData.pitchData ? (
-                          <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div className="rounded-lg bg-background/50 px-4 py-3">
-                              <p className="text-base font-medium text-muted-foreground">Company</p>
-                              <p className="text-lg font-semibold">{activeDeal.sourceData.pitchData.companyName}</p>
+                          <div className="grid grid-cols-2 gap-4 mt-5">
+                            <div className="rounded-xl bg-black/20 border border-white/5 px-5 py-4">
+                              <p className="text-sm font-medium text-[#8b9fc4]">Company</p>
+                              <p className="text-lg font-bold text-white mt-1">{activeDeal.sourceData.pitchData.companyName}</p>
                             </div>
-                            <div className="rounded-lg bg-background/50 px-4 py-3">
-                              <p className="text-base font-medium text-muted-foreground">Sector</p>
-                              <p className="text-lg font-semibold">{activeDeal.sourceData.pitchData.sector || "N/A"}</p>
+                            <div className="rounded-xl bg-black/20 border border-white/5 px-5 py-4">
+                              <p className="text-sm font-medium text-[#8b9fc4]">Sector</p>
+                              <p className="text-lg font-bold text-white mt-1">{activeDeal.sourceData.pitchData.sector || "N/A"}</p>
                             </div>
-                            <div className="rounded-lg bg-background/50 px-4 py-3">
-                              <p className="text-base font-medium text-muted-foreground">Stage</p>
-                              <p className="text-lg font-semibold">{activeDeal.sourceData.pitchData.stage || "N/A"}</p>
+                            <div className="rounded-xl bg-black/20 border border-white/5 px-5 py-4">
+                              <p className="text-sm font-medium text-[#8b9fc4]">Stage</p>
+                              <p className="text-lg font-bold text-white mt-1">{activeDeal.sourceData.pitchData.stage || "N/A"}</p>
                             </div>
-                            <div className="rounded-lg bg-background/50 px-4 py-3">
-                              <p className="text-base font-medium text-muted-foreground">Competitors Identified</p>
-                              <p className="text-lg font-semibold">{activeDeal.sourceData.pitchData.mainCompetitors?.join(", ") || "None"}</p>
+                            <div className="rounded-xl bg-black/20 border border-white/5 px-5 py-4">
+                              <p className="text-sm font-medium text-[#8b9fc4]">Competitors Identified</p>
+                              <p className="text-lg font-bold text-white mt-1">{activeDeal.sourceData.pitchData.mainCompetitors?.join(", ") || "None"}</p>
                             </div>
                           </div>
                         ) : (
-                          <p className="text-base text-muted-foreground/60 italic">Pitch data not available</p>
+                          <p className="text-sm text-[#8b9fc4] italic mt-4">Pitch data not available</p>
                         )}
                       </div>
 
@@ -1584,32 +1581,37 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <>
-                <div className="flex flex-col items-center text-center mb-12">
-                  <div className="mb-6 rounded-2xl bg-muted/30 p-6">
-                    <FileText className="h-12 w-12 text-muted-foreground/30" />
+                <div className="flex flex-col items-center text-center mb-10 pt-8">
+                  <div className="relative mb-8">
+                    {/* Animated gradient orb */}
+                    <div className="absolute inset-0 -m-8 rounded-full bg-gradient-to-r from-violet-600/30 to-blue-600/30 blur-3xl animate-[glow-pulse_3s_ease-in-out_infinite]" />
+                    <div className="relative rounded-2xl panel p-6 border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.3)]">
+                      <FileText className="h-12 w-12 text-[#a78bfa]" />
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-foreground/80">No memo yet</h3>
-                  <p className="mt-4 max-w-md text-lg leading-relaxed text-muted-foreground">
-                    Upload a pitch deck on the left, then click Generate to create your investment memo.
+                  <h3 className="text-3xl font-bold text-white tracking-tight">No memo yet</h3>
+                  <p className="mt-4 max-w-sm text-base leading-relaxed text-[#8b9fc4]">
+                    Upload a pitch deck on the left, then click <span className="text-white font-semibold">Generate</span> to create your AI-powered investment memo.
                   </p>
-                  <div className="mt-8 flex items-center gap-8 text-base text-muted-foreground/40">
-                    <div className="flex items-center gap-2.5">
-                      <Shield className="h-5 w-5" />
+                  <div className="mt-8 flex items-center gap-6 text-sm font-medium text-[#6b7fa3]">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
+                      <Shield className="h-4 w-4 text-emerald-400" />
                       Secure
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <TrendingUp className="h-5 w-5" />
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
+                      <TrendingUp className="h-4 w-4 text-blue-400" />
                       Real-time
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <BrainCircuit className="h-5 w-5" />
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
+                      <BrainCircuit className="h-4 w-4 text-violet-400" />
                       AI-powered
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* ── DATA SOURCE CAPABILITIES ── */}
+            {/* ── DATA SOURCE CAPABILITIES ── */}
                 <div className="max-w-3xl mx-auto">
                   <div className="border-t-2 border-border/20 pt-10 mb-6">
                     <h3 className="text-xl font-bold flex items-center gap-3 mb-2">
@@ -1621,19 +1623,19 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <div className="grid gap-5">
+                  <div className="grid gap-6">
                     {/* Yahoo Finance */}
-                    <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/15">
-                          <BarChart3 className="h-5 w-5 text-blue-400" />
+                    <div className="rounded-xl panel p-6">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                          <BarChart3 className="h-6 w-6 text-blue-400" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-bold">Yahoo Finance</h4>
-                          <p className="text-base text-muted-foreground">Real-time market quotes</p>
+                          <h4 className="text-lg font-bold text-white">Yahoo Finance</h4>
+                          <p className="text-sm text-[#8b9fc4]">Real-time market quotes</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         {[
                           { label: "Company Name & Sector", desc: "Industry classification" },
                           { label: "Current Stock Price", desc: "Live market price" },
@@ -1642,9 +1644,9 @@ export default function Home() {
                           { label: "Revenue Growth", desc: "Percentage change" },
                           { label: "52-Week Range", desc: "Price high / low" },
                         ].map((item) => (
-                          <div key={item.label} className="rounded-lg bg-background/50 px-4 py-3">
-                            <p className="text-base font-semibold">{item.label}</p>
-                            <p className="text-sm text-muted-foreground">{item.desc}</p>
+                          <div key={item.label} className="rounded-xl bg-black/20 border border-white/5 px-4 py-3">
+                            <p className="text-sm font-bold text-white">{item.label}</p>
+                            <p className="text-xs text-[#8b9fc4] mt-1">{item.desc}</p>
                           </div>
                         ))}
                       </div>
@@ -1675,30 +1677,25 @@ export default function Home() {
                         ))}
                       </div>
                     </div>
-
                     {/* Claude AI */}
-                    <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-6">
+                    <div className="rounded-xl panel p-6">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/15">
-                          <BrainCircuit className="h-5 w-5 text-violet-400" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                          <BrainCircuit className="h-6 w-6 text-violet-400" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-bold">Claude AI (Sonnet)</h4>
-                          <p className="text-base text-muted-foreground">Pitch deck parsing &amp; memo generation</p>
+                          <h4 className="text-lg font-bold text-white">Claude AI (Sonnet)</h4>
+                          <p className="text-sm text-[#8b9fc4]">Pitch deck parsing &amp; memo generation</p>
                         </div>
                       </div>
-                        <p className="text-base text-muted-foreground leading-relaxed">
-                        Extracts company name, product, sector, competitors (as tickers), TAM, funding ask, team highlights, and key metrics. Then combines all data sources into a structured investment memo with a BUY / HOLD / PASS verdict.
+                      <p className="text-base text-[#6b7fa3] leading-relaxed mt-2">
+                        Extracts company name, product, sector, competitors (as tickers), TAM, funding ask, team highlights, and key metrics. Then combines all data sources into a structured investment memo with a <strong className="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">BUY</strong> / <strong className="text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded">HOLD</strong> / <strong className="text-red-400 font-semibold bg-red-500/10 px-2 py-0.5 rounded">PASS</strong> verdict.
                       </p>
                     </div>
                   </div>
+                  </div>
                 </div>
-                </>
               )}
-            </div>
-          </div>
-          )}
-
           {/* Gmail Updates Content */}
           {activeTab === "gmail" && (
           <div className="flex-1 overflow-y-auto">
@@ -1719,32 +1716,32 @@ export default function Home() {
 
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="rounded-xl border border-border/30 bg-card/50 p-5">
+                <div className="rounded-xl panel p-5">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/15">
                       <Mail className="h-5 w-5 text-blue-400" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Scans</p>
+                    <p className="text-sm font-medium text-[#8b9fc4] uppercase tracking-wider">Total Scans</p>
                   </div>
-                  <p className="text-4xl font-bold">{gmailScans.length}</p>
+                  <p className="text-4xl font-bold text-white">{gmailScans.length}</p>
                 </div>
-                <div className="rounded-xl border border-border/30 bg-card/50 p-5">
+                <div className="rounded-xl panel p-5">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
                       <CheckCircle className="h-5 w-5 text-emerald-400" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Deals Found</p>
+                    <p className="text-sm font-medium text-[#8b9fc4] uppercase tracking-wider">Deals Found</p>
                   </div>
-                  <p className="text-4xl font-bold">{gmailDeals.length}</p>
+                  <p className="text-4xl font-bold text-white">{gmailDeals.length}</p>
                 </div>
-                <div className="rounded-xl border border-border/30 bg-card/50 p-5">
+                <div className="rounded-xl panel p-5">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/15">
                       <Inbox className="h-5 w-5 text-violet-400" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Gmail</p>
+                    <p className="text-sm font-medium text-[#8b9fc4] uppercase tracking-wider">Gmail</p>
                   </div>
-                  <p className="text-xl font-bold truncate">{gmailConfigured ? gmailUser : "Not configured"}</p>
+                  <p className="text-xl font-bold text-white truncate">{gmailConfigured ? gmailUser : "Not configured"}</p>
                 </div>
               </div>
 
@@ -1755,11 +1752,11 @@ export default function Home() {
                   Scan History
                 </h3>
                 {gmailScans.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border/40 bg-muted/10 p-10 text-center">
-                    <Mail className="mx-auto h-10 w-10 text-muted-foreground/30 mb-4" />
-                    <p className="text-lg font-medium text-muted-foreground/60">No scans yet</p>
-                    <p className="text-base text-muted-foreground/40 mt-2">
-                      Click &quot;Scan Inbox Now&quot; to crawl your Gmail for pitch decks
+                  <div className="rounded-xl drop-zone border-dashed p-10 text-center">
+                    <Mail className="mx-auto h-12 w-12 text-[#6b7fa3] mb-4" />
+                    <p className="text-lg font-medium text-white">No scans yet</p>
+                    <p className="text-base text-[#8b9fc4] mt-2">
+                      Click <span className="text-[#a78bfa] font-bold">Scan Now</span> to crawl your Gmail for pitch decks
                     </p>
                   </div>
                 ) : (
@@ -1876,27 +1873,26 @@ export default function Home() {
                   </h3>
                   <div className="grid gap-3">
                     {gmailDeals.map((deal) => (
-                      <div key={deal.filename} className="rounded-xl border border-border/20 bg-card/30 p-5">
+                      <div key={deal.filename} className="rounded-xl panel p-5">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-lg font-bold">{deal.companyName}</h4>
+                          <h4 className="text-lg font-bold text-white">{deal.companyName}</h4>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-sm">{deal.sector}</Badge>
-                            <Badge
-                              variant="outline"
-                              className={`text-sm font-bold ${
-                                deal.verdict === "STRONG BUY" ? "border-emerald-500/40 text-emerald-400"
-                                  : deal.verdict === "BUY" ? "border-green-500/40 text-green-400"
-                                  : deal.verdict === "HOLD" ? "border-amber-500/40 text-amber-400"
-                                  : deal.verdict === "PASS" ? "border-red-500/40 text-red-400"
-                                  : "border-border/40 text-muted-foreground"
+                            <span className="text-xs bg-white/10 px-2 py-1 rounded text-white">{deal.sector}</span>
+                            <span
+                              className={`text-xs font-bold px-2 py-1 rounded ${
+                                deal.verdict === "STRONG BUY" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                  : deal.verdict === "BUY" ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                  : deal.verdict === "HOLD" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                  : deal.verdict === "PASS" ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                  : "bg-white/10 text-[#8b9fc4]"
                               }`}
                             >
                               {deal.verdict}
-                            </Badge>
+                            </span>
                           </div>
                         </div>
-                        <p className="text-base text-muted-foreground">{deal.summary}</p>
-                        <p className="text-sm text-muted-foreground/50 mt-2">
+                        <p className="text-base text-[#e8eaf2]">{deal.summary}</p>
+                        <p className="text-sm text-[#8b9fc4] mt-3 border-t border-white/5 pt-3">
                           {deal.date} · from {deal.sender}
                         </p>
                       </div>
@@ -1975,10 +1971,10 @@ export default function Home() {
 
               {/* Results */}
               {researchResults.length === 0 && !isResearching ? (
-                <div className="rounded-xl border border-dashed border-border/40 bg-muted/10 p-16 text-center">
-                  <Newspaper className="mx-auto h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-xl font-medium text-muted-foreground/60">No research yet</p>
-                  <p className="text-base text-muted-foreground/40 mt-2">
+                <div className="rounded-xl drop-zone border-dashed p-16 text-center">
+                  <Newspaper className="mx-auto h-12 w-12 text-[#6b7fa3] mb-4" />
+                  <p className="text-xl font-bold text-white">No research yet</p>
+                  <p className="text-base text-[#8b9fc4] mt-2">
                     Search for any company or topic to get live market data, news, and AI analysis
                   </p>
                 </div>
@@ -1987,10 +1983,10 @@ export default function Home() {
                   {researchResults.map((result, idx) => (
                     <div
                       key={result.id}
-                      className={`rounded-xl border transition-all ${
+                      className={`rounded-xl transition-all ${
                         activeResearchIndex === idx
-                          ? "border-primary/40 bg-primary/5"
-                          : "border-border/20 bg-card/30"
+                          ? "panel border-violet-500/40 shadow-[0_0_20px_rgba(139,92,246,0.1)]"
+                          : "panel opacity-80 hover:opacity-100"
                       }`}
                     >
                       {/* Result Header */}
@@ -2038,49 +2034,49 @@ export default function Home() {
                           {/* Company Ticker Cards */}
                           {result.companies.length > 0 && (
                             <div>
-                              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Market Data</h4>
+                              <h4 className="text-sm font-bold text-[#8b9fc4] uppercase tracking-wider mb-3">Market Data</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {result.companies.map((company) => {
                                   const isPositive = company.change.startsWith("+");
                                   const isNegative = company.change.startsWith("-");
                                   return (
-                                    <div key={company.ticker} className="rounded-xl border border-border/20 bg-background/50 p-4">
+                                    <div key={company.ticker} className="rounded-xl bg-black/20 border border-white/5 p-5">
                                       <div className="flex items-center justify-between mb-3">
                                         <div>
-                                          <p className="text-base font-bold">{company.ticker}</p>
-                                          <p className="text-sm text-muted-foreground truncate max-w-[150px]">{company.name}</p>
+                                          <p className="text-lg font-bold text-white">{company.ticker}</p>
+                                          <p className="text-sm text-[#8b9fc4] truncate max-w-[150px]">{company.name}</p>
                                         </div>
                                         <div className={`flex items-center gap-1 text-base font-bold ${
-                                          isPositive ? "text-emerald-400" : isNegative ? "text-red-400" : "text-muted-foreground"
+                                          isPositive ? "text-emerald-400" : isNegative ? "text-red-400" : "text-[#8b9fc4]"
                                         }`}>
                                           {isPositive ? <ArrowUpRight className="h-4 w-4" /> : isNegative ? <ArrowDownRight className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
                                           {company.changePercent}
                                         </div>
                                       </div>
-                                      <p className="text-3xl font-bold mb-3">
+                                      <p className="text-3xl font-bold text-white mb-4">
                                         {company.price != null ? `$${company.price.toFixed(2)}` : "N/A"}
                                       </p>
-                                      <div className="grid grid-cols-2 gap-2 text-base">
+                                      <div className="grid grid-cols-2 gap-3 text-sm">
                                         <div>
-                                          <p className="text-muted-foreground">Mkt Cap</p>
-                                          <p className="font-semibold">{company.marketCap}</p>
+                                          <p className="text-[#8b9fc4]">Mkt Cap</p>
+                                          <p className="font-bold text-white">{company.marketCap}</p>
                                         </div>
                                         <div>
-                                          <p className="text-muted-foreground">P/E</p>
-                                          <p className="font-semibold">{company.peRatio}</p>
+                                          <p className="text-[#8b9fc4]">P/E</p>
+                                          <p className="font-bold text-white">{company.peRatio}</p>
                                         </div>
                                         <div>
-                                          <p className="text-muted-foreground">Volume</p>
-                                          <p className="font-semibold">{company.volume}</p>
+                                          <p className="text-[#8b9fc4]">Volume</p>
+                                          <p className="font-bold text-white">{company.volume}</p>
                                         </div>
                                         <div>
-                                          <p className="text-muted-foreground">Sector</p>
-                                          <p className="font-semibold truncate">{company.sector}</p>
+                                          <p className="text-[#8b9fc4]">Sector</p>
+                                          <p className="font-bold text-white truncate">{company.sector}</p>
                                         </div>
                                       </div>
-                                      <div className="mt-2 text-base">
-                                        <p className="text-muted-foreground">52-Wk Range</p>
-                                        <p className="font-semibold">{company.fiftyTwoWeekRange}</p>
+                                      <div className="mt-3 text-sm border-t border-white/5 pt-3">
+                                        <p className="text-[#8b9fc4]">52-Wk Range</p>
+                                        <p className="font-bold text-white">{company.fiftyTwoWeekRange}</p>
                                       </div>
                                     </div>
                                   );
@@ -2195,64 +2191,63 @@ export default function Home() {
           )}
         </main>
 
-        {/* ===== RIGHT SIDEBAR: Founder Intel ===== */}
-        <aside className={`flex w-[440px] shrink-0 flex-col border-l-2 border-border/50 bg-card/20 transition-all ${activeDeal && activeMemo ? "" : "hidden xl:flex"}`}>
+      {/* ===== RIGHT SIDEBAR: Founder Intel ===== */}
+        <aside className={`flex w-[440px] shrink-0 flex-col panel rounded-none border-y-0 border-r-0 border-l border-white/10 z-0 transition-all ${activeDeal && activeMemo ? "" : "hidden xl:flex"}`}>
           {activeDeal && activeMemo ? (
             <>
               {/* Founder Intel Header */}
-              <div className="flex items-center gap-4 border-b-2 border-border/40 px-6 py-6">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-rose-500/15">
-                  <ShieldAlert className="h-7 w-7 text-rose-400" />
+              <div className="flex items-center gap-4 border-b border-white/5 px-6 py-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
+                  <ShieldAlert className="h-6 w-6 text-rose-400" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xl font-bold truncate">Founder Intel</h3>
-                  <p className="text-base text-muted-foreground">Background check &amp; verification</p>
+                  <h3 className="text-xl font-bold text-white truncate">Founder Intel</h3>
+                  <p className="text-sm text-[#8b9fc4]">Background check &amp; verification</p>
                 </div>
                 {activeDeal.sourceData?.founderIntel && (
-                  <Badge
-                    variant="outline"
-                    className={`text-sm px-3 py-1 whitespace-nowrap ${
+                  <span
+                    className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap border ${
                       activeDeal.sourceData.founderIntel.overallRiskLevel === "low"
-                        ? "border-emerald-500/40 text-emerald-400"
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                         : activeDeal.sourceData.founderIntel.overallRiskLevel === "medium"
-                          ? "border-amber-500/40 text-amber-400"
-                          : "border-rose-500/40 text-rose-400"
+                          ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                          : "bg-rose-500/10 border-rose-500/30 text-rose-400"
                     }`}
                   >
                     {activeDeal.sourceData.founderIntel.overallRiskLevel === "low" ? "🟢" : activeDeal.sourceData.founderIntel.overallRiskLevel === "medium" ? "🟡" : "🔴"}{" "}
                     {activeDeal.sourceData.founderIntel.overallRiskLevel.toUpperCase()} RISK
-                  </Badge>
+                  </span>
                 )}
               </div>
 
               {/* Founder Intel Content */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {activeDeal.sourceData?.founderIntel ? (
                   <>
                     {/* Summary */}
-                    <div className="rounded-xl border border-slate-500/20 bg-slate-500/5 p-5">
-                      <p className="text-base leading-relaxed">{activeDeal.sourceData.founderIntel.summary}</p>
+                    <div className="rounded-xl bg-white/5 border border-white/5 p-5">
+                      <p className="text-sm text-[#e8eaf2] leading-relaxed">{activeDeal.sourceData.founderIntel.summary}</p>
                     </div>
 
                     {/* Founder Profiles */}
                     {activeDeal.sourceData.founderIntel.founders.length > 0 && (
-                      <div className="space-y-3">
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Founder Profiles</h4>
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-[#8b9fc4] uppercase tracking-wider">Founder Profiles</h4>
                         {activeDeal.sourceData.founderIntel.founders.map((founder, idx) => (
-                          <div key={idx} className={`rounded-xl border p-5 ${
+                          <div key={idx} className={`rounded-xl bg-black/20 border p-5 ${
                             founder.overallAssessment === "green"
-                              ? "border-emerald-500/20 bg-emerald-500/5"
+                              ? "border-emerald-500/20"
                               : founder.overallAssessment === "yellow"
-                                ? "border-amber-500/20 bg-amber-500/5"
-                                : "border-rose-500/20 bg-rose-500/5"
+                                ? "border-amber-500/20"
+                                : "border-rose-500/20"
                           }`}>
-                            <div className="flex items-center gap-3 mb-3">
+                            <div className="flex items-center gap-3 mb-4">
                               <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
                                 founder.overallAssessment === "green"
-                                  ? "bg-emerald-500/15"
+                                  ? "bg-emerald-500/10"
                                   : founder.overallAssessment === "yellow"
-                                    ? "bg-amber-500/15"
-                                    : "bg-rose-500/15"
+                                    ? "bg-amber-500/10"
+                                    : "bg-rose-500/10"
                               }`}>
                                 <UserCheck className={`h-5 w-5 ${
                                   founder.overallAssessment === "green"
@@ -2263,32 +2258,31 @@ export default function Home() {
                                 }`} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-base font-bold truncate">{founder.name}</h3>
+                                <h3 className="text-base font-bold text-white truncate">{founder.name}</h3>
                               </div>
-                              <Badge
-                                variant="outline"
-                                className={`text-xs px-2 py-0.5 ${
+                              <span
+                                className={`text-[10px] font-bold px-2 py-1 rounded border ${
                                   founder.overallAssessment === "green"
-                                    ? "border-emerald-500/40 text-emerald-400"
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                                     : founder.overallAssessment === "yellow"
-                                      ? "border-amber-500/40 text-amber-400"
-                                      : "border-rose-500/40 text-rose-400"
+                                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                                      : "bg-rose-500/10 border-rose-500/30 text-rose-400"
                                 }`}
                               >
                                 {founder.overallAssessment === "green" ? "✓ CLEAR" : founder.overallAssessment === "yellow" ? "⚠ CAUTION" : "✗ FLAG"}
-                              </Badge>
+                              </span>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{founder.linkedinSummary}</p>
+                            <p className="text-sm text-[#8b9fc4] mb-4 leading-relaxed">{founder.linkedinSummary}</p>
 
                             {/* Prior Ventures */}
                             {founder.priorVentures.length > 0 && (
-                              <div className="mb-2">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                  <Building className="h-4 w-4" /> Prior Ventures
+                              <div className="mb-3">
+                                <p className="text-[10px] font-bold text-[#6b7fa3] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                  <Building className="h-3.5 w-3.5" /> Prior Ventures
                                 </p>
-                                <ul className="space-y-0.5">
+                                <ul className="space-y-1">
                                   {founder.priorVentures.map((v, i) => (
-                                    <li key={i} className="text-sm text-foreground/80">{v}</li>
+                                    <li key={i} className="text-sm text-white">{v}</li>
                                   ))}
                                 </ul>
                               </div>
@@ -2452,34 +2446,32 @@ export default function Home() {
 
                 {/* ===== LEGAL & CAP TABLE SCAN ===== */}
                 {activeDeal.sourceData?.legalScan && (
-                  <>
-                    <div className="border-t-2 border-border/40 mt-6 pt-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
-                          <Shield className="h-5 w-5 text-amber-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold">Legal &amp; Cap Table Scan</h3>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs px-2 py-0.5 whitespace-nowrap ${
-                            activeDeal.sourceData.legalScan.overallRiskLevel === "low"
-                              ? "border-emerald-500/40 text-emerald-400"
-                              : activeDeal.sourceData.legalScan.overallRiskLevel === "medium"
-                                ? "border-amber-500/40 text-amber-400"
-                                : "border-rose-500/40 text-rose-400"
-                          }`}
-                        >
-                          {activeDeal.sourceData.legalScan.overallRiskLevel === "low" ? "🟢" : activeDeal.sourceData.legalScan.overallRiskLevel === "medium" ? "🟡" : "🔴"}{" "}
-                          {activeDeal.sourceData.legalScan.overallRiskLevel.toUpperCase()} RISK
-                        </Badge>
+                  <div className="border-t border-white/10 mt-6 pt-6 mb-6">
+                    <div className="flex items-center gap-4 mb-5">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                        <Shield className="h-6 w-6 text-amber-400" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-white">Legal &amp; Cap Table</h3>
+                      </div>
+                      <span
+                        className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap border ${
+                          activeDeal.sourceData.legalScan.overallRiskLevel === "low"
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                            : activeDeal.sourceData.legalScan.overallRiskLevel === "medium"
+                              ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                              : "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                        }`}
+                      >
+                        {activeDeal.sourceData.legalScan.overallRiskLevel === "low" ? "🟢" : activeDeal.sourceData.legalScan.overallRiskLevel === "medium" ? "🟡" : "🔴"}{" "}
+                        {activeDeal.sourceData.legalScan.overallRiskLevel.toUpperCase()} RISK
+                      </span>
+                    </div>
 
-                      {/* Summary */}
-                      <div className="rounded-xl border border-slate-500/20 bg-slate-500/5 p-4 mb-4">
-                        <p className="text-sm leading-relaxed">{activeDeal.sourceData.legalScan.summary}</p>
-                      </div>
+                    {/* Summary */}
+                    <div className="rounded-xl bg-white/5 border border-white/5 p-5 mb-5">
+                      <p className="text-sm text-[#e8eaf2] leading-relaxed">{activeDeal.sourceData.legalScan.summary}</p>
+                    </div>
 
                       {/* IP Flags */}
                       {activeDeal.sourceData.legalScan.ipFlags.length > 0 && (
@@ -2549,26 +2541,26 @@ export default function Home() {
 
                       {/* Cap Table Flags */}
                       {activeDeal.sourceData.legalScan.capTableFlags.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <div className="mb-5">
+                          <h4 className="text-xs font-bold text-[#8b9fc4] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                             📋 Cap Table Red Flags
                           </h4>
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {activeDeal.sourceData.legalScan.capTableFlags.map((flag, i) => (
-                              <div key={i} className={`rounded-lg border p-3 ${
+                              <div key={i} className={`rounded-lg bg-black/20 border p-4 ${
                                 flag.severity === "critical"
-                                  ? "border-rose-500/30 bg-rose-500/5"
+                                  ? "border-rose-500/30"
                                   : flag.severity === "warning"
-                                    ? "border-amber-500/30 bg-amber-500/5"
-                                    : "border-blue-500/30 bg-blue-500/5"
+                                    ? "border-amber-500/30"
+                                    : "border-blue-500/30"
                               }`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-xs font-bold uppercase ${
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className={`text-[10px] font-bold uppercase ${
                                     flag.severity === "critical" ? "text-rose-400" : flag.severity === "warning" ? "text-amber-400" : "text-blue-400"
                                   }`}>{flag.severity}</span>
-                                  <span className="text-sm font-semibold">{flag.issue}</span>
+                                  <span className="text-sm font-bold text-white">{flag.issue}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground leading-relaxed">{flag.detail}</p>
+                                <p className="text-sm text-[#8b9fc4] leading-relaxed">{flag.detail}</p>
                               </div>
                             ))}
                           </div>
@@ -2577,24 +2569,24 @@ export default function Home() {
 
                       {/* Missing Documents Checklist */}
                       {activeDeal.sourceData.legalScan.missingDocuments.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <div className="mb-5">
+                          <h4 className="text-xs font-bold text-[#8b9fc4] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                             📝 Missing Documents Checklist
                           </h4>
-                          <div className="space-y-1.5">
+                          <div className="space-y-2">
                             {activeDeal.sourceData.legalScan.missingDocuments.map((doc, i) => (
-                              <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-500/20 bg-slate-500/5 px-3 py-2.5">
+                              <div key={i} className="flex items-start gap-3 rounded-lg bg-white/5 border border-white/5 px-4 py-3">
                                 <span className={`mt-0.5 text-xs font-bold uppercase shrink-0 ${
                                   doc.importance === "required" ? "text-rose-400" : doc.importance === "recommended" ? "text-amber-400" : "text-blue-400"
                                 }`}>
                                   {doc.importance === "required" ? "⬜" : doc.importance === "recommended" ? "◻️" : "○"}
                                 </span>
                                 <div className="min-w-0">
-                                  <p className="text-sm font-medium">{doc.document}</p>
-                                  <p className="text-xs text-muted-foreground">{doc.reason}</p>
-                                  <Badge variant="outline" className={`text-[10px] mt-1 px-1.5 py-0 ${
-                                    doc.importance === "required" ? "border-rose-500/30 text-rose-400" : doc.importance === "recommended" ? "border-amber-500/30 text-amber-400" : "border-blue-500/30 text-blue-400"
-                                  }`}>{doc.importance}</Badge>
+                                  <p className="text-sm font-bold text-white mb-0.5">{doc.document}</p>
+                                  <p className="text-xs text-[#8b9fc4]">{doc.reason}</p>
+                                  <span className={`text-[10px] font-bold uppercase mt-2 inline-block px-1.5 py-0.5 rounded border ${
+                                    doc.importance === "required" ? "bg-rose-500/10 border-rose-500/30 text-rose-400" : doc.importance === "recommended" ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                                  }`}>{doc.importance}</span>
                                 </div>
                               </div>
                             ))}
@@ -2607,70 +2599,69 @@ export default function Home() {
                         activeDeal.sourceData.legalScan.financialDiscrepancies.length === 0 &&
                         activeDeal.sourceData.legalScan.capTableFlags.length === 0 &&
                         activeDeal.sourceData.legalScan.missingDocuments.length === 0 && (
-                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                          <p className="text-sm text-emerald-400 flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4" />
+                        <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-5">
+                          <p className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5" />
                             No legal or financial red flags detected
                           </p>
                         </div>
                       )}
                     </div>
-                  </>
                 )}
               </div>
             </>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-              <div className="mb-4 rounded-full bg-muted/20 p-5">
-                <ShieldAlert className="h-10 w-10 text-muted-foreground/20" />
+            <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+              <div className="mb-6 rounded-full bg-white/5 border border-white/10 p-6">
+                <ShieldAlert className="h-12 w-12 text-[#6b7fa3]" />
               </div>
-              <h3 className="text-xl font-semibold text-muted-foreground/40">Founder Intel</h3>
-              <p className="mt-3 text-base leading-relaxed text-muted-foreground/30">
+              <h3 className="text-xl font-bold text-white">Founder Intel</h3>
+              <p className="mt-4 text-base leading-relaxed text-[#6b7fa3]">
                 Generate a memo to run<br />founder background checks
               </p>
             </div>
           )}
         </aside>
-      </div>
+    </div>
 
-      {/* ===== FLOATING CHATBOT ===== */}
-      {/* Chat Toggle Button */}
+    {/* ===== FLOATING CHATBOT ===== */}
+      {/* Chat Toggle Button — gradient with glow */}
       <button
         onClick={() => setChatOpen(!chatOpen)}
-        className={`fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full shadow-lg shadow-violet-500/25 transition-all hover:scale-105 ${
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 hover:scale-105 ${
           chatOpen
-            ? "bg-muted/80 text-muted-foreground rotate-0"
-            : "bg-violet-600 text-white"
+            ? "panel opacity-100 shadow-xl border-white/10"
+            : "btn-gradient shadow-xl text-white hover:shadow-[0_0_20px_rgba(139,92,246,0.5)]"
         }`}
       >
-        {chatOpen ? <X className="h-7 w-7" /> : <MessageCircle className="h-7 w-7" />}
+        {chatOpen ? <X className="h-6 w-6 text-white" /> : <MessageCircle className="h-6 w-6 text-white" />}
       </button>
 
-      {/* Chat Popup */}
+      {/* Chat Popup — glassmorphism panel */}
       {chatOpen && (
-        <div className="fixed bottom-24 right-6 z-50 flex w-[440px] max-h-[650px] flex-col rounded-2xl border-2 border-border/50 bg-background shadow-2xl shadow-black/30 overflow-hidden">
+        <div className="fixed bottom-24 right-6 z-50 flex w-[400px] max-h-[600px] flex-col rounded-2xl panel shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-white/10 overflow-hidden">
           {/* Chat Popup Header */}
-          <div className="flex items-center gap-3 border-b border-border/40 px-5 py-4 bg-card/50">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15">
-              <Bot className="h-6 w-6 text-violet-400" />
+          <div className="flex items-center gap-3 border-b border-white/5 px-5 py-4 bg-black/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20 border border-violet-500/20 shadow-[0_0_10px_rgba(139,92,246,0.2)]">
+              <Bot className="h-5 w-5 text-violet-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-base font-bold truncate">
-                {activeDeal && activeMemo ? `Ask about ${activeDeal.companyName}` : "Diligent-AI Assistant"}
+              <h3 className="text-base font-bold text-white truncate">
+                {activeDeal && activeMemo ? `Ask about ${activeDeal?.companyName}` : "Diligent-AI Assistant"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-[#8b9fc4]">
                 {activeDeal && activeMemo ? "Deal-specific Q&A" : "Finance, trading & company research"}
               </p>
             </div>
-            <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground">
-              <X className="h-5 w-5" />
+            <button onClick={() => setChatOpen(false)} className="text-[#6b7fa3] hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-lg">
+              <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[480px]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[260px] max-h-[430px]">
             {(() => {
-              const chatHistory = activeDeal && activeMemo ? activeDeal.chatHistory : generalChatHistory;
+              const chatHistory = activeDeal && activeMemo ? activeDeal?.chatHistory : generalChatHistory;
               const isEmpty = !chatHistory || chatHistory.length === 0;
               return (
                 <>
@@ -2681,7 +2672,7 @@ export default function Home() {
                       </div>
                       <p className="text-base font-medium text-muted-foreground/60">
                         {activeDeal && activeMemo
-                          ? `Ask anything about ${activeDeal.companyName}`
+                          ? `Ask anything about ${activeDeal?.companyName}`
                           : "Ask me anything about finance, trading, or companies"}
                       </p>
                       <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -2752,7 +2743,7 @@ export default function Home() {
           </div>
 
           {/* Chat Input — always visible */}
-          <div className="border-t border-border/40 p-4">
+          <div className="border-t border-white/10 p-4 bg-black/20">
             <form
               onSubmit={(e) => { e.preventDefault(); handleChat(); }}
               className="flex gap-2"
@@ -2761,18 +2752,17 @@ export default function Home() {
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder={activeDeal && activeMemo ? `Ask about ${activeDeal.companyName}...` : "Ask about finance, stocks, trading..."}
-                className="flex-1 rounded-xl border border-border/40 bg-muted/10 px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/20"
+                placeholder={activeDeal && activeMemo ? `Ask about ${activeDeal?.companyName}...` : "Ask about finance, stocks, trading..."}
+                className="flex-1 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-[#6b7fa3] focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/20"
                 disabled={isChatting}
               />
-              <Button
+              <button
                 type="submit"
-                size="sm"
-                className="gap-2 rounded-xl px-4 py-3"
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 btn-gradient text-white shadow-[0_4px_15px_rgba(139,92,246,0.3)] hover:shadow-[0_6px_20px_rgba(139,92,246,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!chatInput.trim() || isChatting}
               >
-                <Send className="h-5 w-5" />
-              </Button>
+                <Send className="h-4 w-4" />
+              </button>
             </form>
           </div>
         </div>
